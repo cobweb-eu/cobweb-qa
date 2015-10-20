@@ -10,13 +10,12 @@ import junit.framework.TestCase;
 
 public class LaplacePhotoBlurTest extends TestCase{
 
-    
     /**
      * Test a blurred image fails LaplacePhotoBlurCheck
      */
     @Test
     public void testBlurred() {
-        URL url = this.getClass().getResource("flower_blurred.png");      
+        URL url = this.getClass().getResource("flower_blurred.png");
 
         try{
             File testImage = new File(url.toURI());
@@ -27,7 +26,7 @@ public class LaplacePhotoBlurTest extends TestCase{
             fail(ex.getMessage());
         }
     }
-    
+
     /**
      * Test a sharp image passes LaplacePhotoBlurCheck
      */
