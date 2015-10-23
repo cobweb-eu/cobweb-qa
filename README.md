@@ -1,5 +1,6 @@
-# cobweb-qa
-Library of COBWEB QA algorithms.
+# cobweb-qa [![Build Status](https://travis-ci.org/cobweb-eu/cobweb-qa.svg?branch=master)](https://travis-ci.org/cobweb-eu/cobweb-qa)
+
+Library of COBWEB QA algorithms. 
 
 The purpose of this library is to enable testing, development and deployment of the COBWEB QA algortihms independently of the 52N WPS.
 
