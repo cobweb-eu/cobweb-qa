@@ -1,22 +1,24 @@
 package eu.cobwebproject.qa.automaticvalidation;
 
-import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import javax.imageio.ImageIO;
 
-public class LaplacePhotoBlurCheck {
+public abstract class LaplacePhotoBlurCheck {
 	
 	File file;
 	int threshold;
 	boolean pass;
-	BufferedImage histogramEQ = null;
-	BufferedImage blackAndWhiteImage = null;
-	BufferedImage laplaceImage = null;
-	BufferedImage strechedLaplaceImage = null;
+	IImage histogramEQ = null;
+	IImage blackAndWhiteImage = null;
+	IImage laplaceImage = null;
+	IImage strechedLaplaceImage = null;
 	
+	abstract IImage read(File imageFile) throws IOException;
+	abstract IImage createImage(int width, int height, int type);
+	abstract Colour createColour(int rgb);
+	abstract Colour createColour(int r, int g, int b);
+	   
 	/**
 	 * @author Sam Meek
 	 * @param imageFile File of the image
@@ -26,11 +28,11 @@ public class LaplacePhotoBlurCheck {
 	public LaplacePhotoBlurCheck(File imageFile, int threshold){
 		this.file = imageFile;
 		this.threshold = threshold;
-		BufferedImage original = null;
-			
+		IImage original = null;
+				
 		try {	
 			
-			original = ImageIO.read(file);
+			original = read(file);
 			System.out.println("image size = " + original.getWidth() + " " + original.getHeight());
 				
 		} catch (IOException e) {
@@ -50,23 +52,24 @@ public class LaplacePhotoBlurCheck {
  * @param original The original image
  * @return An image after the Laplace transform
  */
-private BufferedImage getLaplaceImage(BufferedImage original){
+private IImage getLaplaceImage(IImage original){
 	
-	BufferedImage pic1 = histogramEqualization(original);
-	BufferedImage pic2 = new BufferedImage(pic1.getWidth(), pic1.getHeight(), BufferedImage.TYPE_INT_RGB);
+	IImage pic1 = histogramEqualization(original);
+	IImage pic2 = this.createImage(pic1.getWidth(), pic1.getHeight(), pic1.getTypeIntRgb());
+	
 	int height = pic1.getHeight();
 	int width = pic1.getWidth();
 	for (int y = 1; y < height - 1; y++) {
         for (int x = 1; x < width - 1; x++) {
-            Color c00 = new Color(pic1.getRGB(x-1, y-1));
-            Color c01 = new Color(pic1.getRGB(x-1, y  ));
-            Color c02 = new Color(pic1.getRGB(x-1, y+1));
-            Color c10 = new Color(pic1.getRGB(x  , y-1));
-            Color c11 = new Color(pic1.getRGB(x  , y  ));
-            Color c12 = new Color(pic1.getRGB(x  , y+1));
-            Color c20 = new Color(pic1.getRGB(x+1, y-1));
-            Color c21 = new Color(pic1.getRGB(x+1, y  ));
-            Color c22 = new Color(pic1.getRGB(x+1, y+1));
+            Colour c00 = this.createColour(pic1.getRGB(x-1, y-1));
+            Colour c01 = this.createColour(pic1.getRGB(x-1, y  ));
+            Colour c02 = this.createColour(pic1.getRGB(x-1, y+1));
+            Colour c10 = this.createColour(pic1.getRGB(x  , y-1));
+            Colour c11 = this.createColour(pic1.getRGB(x  , y  ));
+            Colour c12 = this.createColour(pic1.getRGB(x  , y+1));
+            Colour c20 = this.createColour(pic1.getRGB(x+1, y-1));
+            Colour c21 = this.createColour(pic1.getRGB(x+1, y  ));
+            Colour c22 = this.createColour(pic1.getRGB(x+1, y+1));
             int r = -c00.getRed() -   c01.getRed() - c02.getRed() +
                     -c10.getRed() + 8*c11.getRed() - c12.getRed() +
                     -c20.getRed() -   c21.getRed() - c22.getRed();
@@ -79,7 +82,7 @@ private BufferedImage getLaplaceImage(BufferedImage original){
             r = Math.min(255, Math.max(0, r));
             g = Math.min(255, Math.max(0, g));
             b = Math.min(255, Math.max(0, b));
-            Color c = new Color(r, g, b);
+            Colour c = this.createColour(r, g, b);
             
             pic2.setRGB(x, y, c.getRGB());
             
@@ -93,7 +96,7 @@ private BufferedImage getLaplaceImage(BufferedImage original){
  * @param original The original image
  * @return a histogram stretched image
  */
-private static BufferedImage histogramEqualization(BufferedImage original) {
+private IImage histogramEqualization(IImage original) {
 	 
     int red;
     int green;
@@ -103,16 +106,16 @@ private static BufferedImage histogramEqualization(BufferedImage original) {
 
     ArrayList<int[]> histLUT = histogramEqualizationLUT(original);
 
-    BufferedImage histogramEQ = new BufferedImage(original.getWidth(), original.getHeight(), original.getType());
+    IImage histogramEQ = this.createImage(original.getWidth(), original.getHeight(), original.getType());
 
     for(int i=0; i<original.getWidth(); i++) {
         for(int j=0; j<original.getHeight(); j++) {
 
             // Get pixels by R, G, B
-            alpha = new Color(original.getRGB (i, j)).getAlpha();
-            red = new Color(original.getRGB (i, j)).getRed();
-            green = new Color(original.getRGB (i, j)).getGreen();
-            blue = new Color(original.getRGB (i, j)).getBlue();
+            alpha = this.createColour(original.getRGB (i, j)).getAlpha();
+            red = this.createColour(original.getRGB (i, j)).getRed();
+            green = this.createColour(original.getRGB (i, j)).getGreen();
+            blue = this.createColour(original.getRGB (i, j)).getBlue();
 
             // Set new pixel values using the histogram lookup table
             red = histLUT.get(0)[red];
@@ -137,7 +140,7 @@ private static BufferedImage histogramEqualization(BufferedImage original) {
  * @param input
  * @return array of the histogram image
  */
-private static ArrayList<int[]> histogramEqualizationLUT(BufferedImage input) {
+private ArrayList<int[]> histogramEqualizationLUT(IImage input) {
 
     // Get an image histogram - calculated values by R, G, B channels
     ArrayList<int[]> imageHist = imageHistogram(input);
@@ -197,7 +200,7 @@ private static ArrayList<int[]> histogramEqualizationLUT(BufferedImage input) {
  * @param input produces image histogram
  * @return returns the histogram
  */
-public static ArrayList<int[]> imageHistogram(BufferedImage input) {
+public ArrayList<int[]> imageHistogram(IImage input) {
 
     int[] rhistogram = new int[256];
     int[] ghistogram = new int[256];
@@ -210,9 +213,9 @@ public static ArrayList<int[]> imageHistogram(BufferedImage input) {
     for(int i=0; i<input.getWidth(); i++) {
         for(int j=0; j<input.getHeight(); j++) {
 
-            int red = new Color(input.getRGB (i, j)).getRed();
-            int green = new Color(input.getRGB (i, j)).getGreen();
-            int blue = new Color(input.getRGB (i, j)).getBlue();
+            int red = this.createColour(input.getRGB (i, j)).getRed();
+            int green = this.createColour(input.getRGB (i, j)).getGreen();
+            int blue = this.createColour(input.getRGB (i, j)).getBlue();
 
             rhistogram[red]++; ghistogram[green]++; bhistogram[blue]++;
 
@@ -250,11 +253,10 @@ private static int colorToRGB(int alpha, int red, int green, int blue) {
  * @param original the buffered image to convert
  * @return greyImage the image in grey scale
  */
-private BufferedImage convertImageToGrey(BufferedImage original){
+private IImage convertImageToGrey(IImage original){
 	
 	
-	BufferedImage greyImage = new BufferedImage(original.getWidth(), 
-			original.getHeight(),BufferedImage.TYPE_BYTE_GRAY);
+	IImage greyImage = this.createImage(original.getWidth(), original.getHeight(), original.getTypeByteGrey());
 	
     int  width = original.getWidth();
     int  height = original.getHeight();
@@ -263,11 +265,11 @@ private BufferedImage convertImageToGrey(BufferedImage original){
      
         for(int j=0; j<width; j++){
         
-           Color c = new Color(original.getRGB(j, i));
+           Colour c = this.createColour(original.getRGB(j, i));
            int red = (int)(c.getRed() * 0.299);
            int green = (int)(c.getGreen() * 0.587);
            int blue = (int)(c.getBlue() *0.114);
-           Color newColor = new Color(red+green+blue,
+           Colour newColor = this.createColour(red+green+blue,
            
            red+green+blue,red+green+blue);
            
@@ -283,7 +285,7 @@ private BufferedImage convertImageToGrey(BufferedImage original){
  * @param threshold a number between 0 - 255
  * @return t boolean of whether the image has passed the test or not
  */
-public boolean getBlurryImageDecision(BufferedImage image, int threshold){
+public boolean getBlurryImageDecision(IImage image, int threshold){
 	boolean t = false;
 	int red = 0;
 	int green = 0;
@@ -296,7 +298,7 @@ public boolean getBlurryImageDecision(BufferedImage image, int threshold){
     for (int i = 0; i < image.getWidth(); i++){
     	for (int j = 0; j < image.getHeight(); j++){
 
-    		Color c = new Color(image.getRGB(i, j));
+    		Colour c = this.createColour(image.getRGB(i, j));
     		red = c.getRed();
     		green = c.getGreen();
     		blue = c.getBlue();
@@ -319,15 +321,15 @@ public boolean getBlurryImageDecision(BufferedImage image, int threshold){
 }
 
 
-public BufferedImage getHistogramStretchedImage(){
+public IImage getHistogramStretchedImage(){
 	return histogramEQ;
 }
 
-public BufferedImage getBlackAndWhiteImage(){
+public IImage getBlackAndWhiteImage(){
 	return blackAndWhiteImage;
 }
 
-public BufferedImage getLaplaceImage(){
+public IImage getLaplaceImage(){
 	return laplaceImage;
 }
 
@@ -335,7 +337,7 @@ public boolean getPassDecision(){
 	return pass;
 }
 
-public BufferedImage getStrechedLaplaceImage(){
+public IImage getStrechedLaplaceImage(){
 	return strechedLaplaceImage;
 }
 

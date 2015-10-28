@@ -19,7 +19,7 @@ public class LaplacePhotoBlurTest extends TestCase{
 
         try{
             File testImage = new File(url.toURI());
-            LaplacePhotoBlurCheck lap = new LaplacePhotoBlurCheck(testImage, 200);
+            LaplacePhotoBlurCheck lap = new LaplacePhotoBlurCheckAwt(testImage, 200);
             assertFalse(lap.getPassDecision());
         }
         catch(URISyntaxException ex){
@@ -36,7 +36,7 @@ public class LaplacePhotoBlurTest extends TestCase{
 
         try{
             File testImage = new File(url.toURI());
-            LaplacePhotoBlurCheck lap = new LaplacePhotoBlurCheck(testImage, 200);
+            LaplacePhotoBlurCheck lap = new LaplacePhotoBlurCheckAwt(testImage, 200);
             assertTrue(lap.getPassDecision());
         }
         catch(URISyntaxException ex){
