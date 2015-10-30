@@ -14,11 +14,17 @@ public abstract class LaplacePhotoBlurCheck {
 	IImage laplaceImage = null;
 	IImage strechedLaplaceImage = null;
 	
-	abstract IImage read(File imageFile) throws IOException;
+	public abstract IImage read(File imageFile) throws IOException;
 	abstract IImage createImage(int width, int height, int type);
+	abstract IImage createImage(int width, int height);
+	abstract IImage createImageGreyscale(int width, int height);
 	abstract Colour createColour(int rgb);
 	abstract Colour createColour(int r, int g, int b);
-	   
+	
+	public LaplacePhotoBlurCheck(){
+	    
+	}
+	
 	/**
 	 * @author Sam Meek
 	 * @param imageFile File of the image
@@ -30,6 +36,7 @@ public abstract class LaplacePhotoBlurCheck {
 		this.threshold = threshold;
 		IImage original = null;
 				
+		System.out.println("* read");
 		try {	
 			
 			original = read(file);
@@ -38,13 +45,23 @@ public abstract class LaplacePhotoBlurCheck {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}		
-			
+		
+        System.out.println("* histogramEqualization");
 		histogramEQ = histogramEqualization(original);
+		
+        System.out.println("* getLaplaceImage");
 		laplaceImage = getLaplaceImage(histogramEQ);
+		
+        System.out.println("* convertImageToGrey");
 		blackAndWhiteImage = convertImageToGrey(laplaceImage);
+		
+        System.out.println("* strechedLaplaceImage");
 		strechedLaplaceImage = histogramEqualization(blackAndWhiteImage);
+		
+        System.out.println("* blackAndWhiteImage");
 		pass = getBlurryImageDecision(blackAndWhiteImage, threshold);
-
+		
+		System.out.println("* finished");
 	}
 	
 /**
@@ -52,10 +69,12 @@ public abstract class LaplacePhotoBlurCheck {
  * @param original The original image
  * @return An image after the Laplace transform
  */
-private IImage getLaplaceImage(IImage original){
+public IImage getLaplaceImage(IImage pic1){
 	
-	IImage pic1 = histogramEqualization(original);
-	IImage pic2 = this.createImage(pic1.getWidth(), pic1.getHeight(), pic1.getTypeIntRgb());
+    // TODO is this looks like a bug?
+	//IImage pic1 = histogramEqualization(original);
+    
+	IImage pic2 = this.createImage(pic1.getWidth(), pic1.getHeight());
 	
 	int height = pic1.getHeight();
 	int width = pic1.getWidth();
@@ -256,7 +275,7 @@ private static int colorToRGB(int alpha, int red, int green, int blue) {
 private IImage convertImageToGrey(IImage original){
 	
 	
-	IImage greyImage = this.createImage(original.getWidth(), original.getHeight(), original.getTypeByteGrey());
+	IImage greyImage = this.createImageGreyscale(original.getWidth(), original.getHeight());
 	
     int  width = original.getWidth();
     int  height = original.getHeight();

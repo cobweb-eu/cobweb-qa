@@ -30,14 +30,6 @@ public class BImage implements IImage{
         return this.image.getType();
     }
 
-    public int getTypeIntRgb(){
-        return BufferedImage.TYPE_INT_RGB;
-    }
-    
-    public int getTypeByteGrey(){
-        return BufferedImage.TYPE_BYTE_GRAY;
-    }
-
     public void setRGB(int x, int y, int rgb) {
         this.image.setRGB(x, y, rgb);
     }
