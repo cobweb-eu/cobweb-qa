@@ -7,13 +7,18 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class LaplacePhotoBlurCheckAwt extends LaplacePhotoBlurCheck{
+    
+    public LaplacePhotoBlurCheckAwt(){
+        super();
+    }
+    
     public LaplacePhotoBlurCheckAwt(File imageFile, int threshold){
         super(imageFile, threshold);
     }
     
     @Override
     public IImage read(File imageFile) throws IOException{
-        return new BImage(ImageIO.read(file));
+        return new BImage(ImageIO.read(imageFile));
     }
     
     @Override

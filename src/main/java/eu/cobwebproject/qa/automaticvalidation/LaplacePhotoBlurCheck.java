@@ -36,7 +36,7 @@ public abstract class LaplacePhotoBlurCheck {
 		this.threshold = threshold;
 		IImage original = null;
 				
-		System.out.println("* read");
+		//System.out.println("* read");
 		try {	
 			
 			original = read(file);
@@ -46,22 +46,22 @@ public abstract class LaplacePhotoBlurCheck {
 			e.printStackTrace();
 		}		
 		
-        System.out.println("* histogramEqualization");
+        //System.out.println("* histogramEqualization");
 		histogramEQ = histogramEqualization(original);
 		
-        System.out.println("* getLaplaceImage");
+        //System.out.println("* getLaplaceImage");
 		laplaceImage = getLaplaceImage(histogramEQ);
 		
-        System.out.println("* convertImageToGrey");
+        //System.out.println("* convertImageToGrey");
 		blackAndWhiteImage = convertImageToGrey(laplaceImage);
 		
-        System.out.println("* strechedLaplaceImage");
+        //System.out.println("* strechedLaplaceImage");
 		strechedLaplaceImage = histogramEqualization(blackAndWhiteImage);
 		
-        System.out.println("* blackAndWhiteImage");
+        //System.out.println("* blackAndWhiteImage");
 		pass = getBlurryImageDecision(blackAndWhiteImage, threshold);
 		
-		System.out.println("* finished");
+		//System.out.println("* finished");
 	}
 	
 /**

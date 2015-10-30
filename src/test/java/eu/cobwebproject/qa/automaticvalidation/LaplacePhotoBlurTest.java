@@ -26,6 +26,21 @@ public class LaplacePhotoBlurTest extends TestCase{
             fail(ex.getMessage());
         }
     }
+    
+    @Test
+    public void testBlurredSmall() {
+        URL url = this.getClass().getResource("flower_blurred_small.png");
+
+        try{
+            File testImage = new File(url.toURI());
+            
+            LaplacePhotoBlurCheck lap = new LaplacePhotoBlurCheckAwt(testImage, 200);            
+            assertFalse(lap.getPassDecision());
+        }
+        catch(URISyntaxException ex){
+            fail(ex.getMessage());
+        }
+    }
 
     /**
      * Test a sharp image passes LaplacePhotoBlurCheck
