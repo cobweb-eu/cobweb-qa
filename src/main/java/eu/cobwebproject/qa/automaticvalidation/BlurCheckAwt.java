@@ -30,33 +30,19 @@ import javax.imageio.ImageIO;
 * 
 * @author EDINA
 */
-public class BlurCheckAwt implements Runnable{
+public class BlurCheckAwt extends BlurCheckRunnable{
         /*********/
-
-        /* the actual Kernel. Any 3x3 kernel should work here for e.g. experimentation */
-        public static final float LAPLACE_KERNEL[]={0,-1,0,-1,4,-1,0,-1,0};
-        /* Check this after the test is run for the result. This is null if process has not yet been "run()" */
-        public Boolean pass;
-
-        /*********/
-
-        private File file;
-        private int threshold;
         private BufferedImage original;
-        private boolean debug;
 
         /** use this for debug messages for now */
-        private void dbg(String msg){
+        @Override
+        protected void dbg(String msg){
             System.out.println(msg);
         }
 
         /** Theshold is the desired variance i.e. the higher the sharper ( 1500 is a good start) */ 
         public BlurCheckAwt(File imageFile, int threshold, boolean debug){
-                this.pass = null;
-                this.file = imageFile;
-                this.threshold = threshold;
-                this.debug = debug;
-                
+                super(imageFile, threshold, debug);
                 try {                
                         this.original=ImageIO.read(imageFile);
                         dbg("image size = " + original.getWidth() + " " + original.getHeight());
@@ -66,6 +52,7 @@ public class BlurCheckAwt implements Runnable{
         }
     
         /** Executes the test. Can run as a thread but should be quite fast anyway */
+        @Override
         public void run(){
                 BufferedImage blackAndWhiteImage = convertImageToGrey(original);
                 BufferedImage laplaceImage = convolve(blackAndWhiteImage, LAPLACE_KERNEL);
