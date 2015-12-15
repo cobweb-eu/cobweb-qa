@@ -1,8 +1,7 @@
 package eu.cobwebproject.qa.automaticvalidation;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-import java.util.Vector;
 
 /**
 * Class to Check for Blurness of an image. The algorithm is as follows
@@ -30,6 +29,7 @@ public abstract class BlurCheckRunnable implements Runnable {
         /*********/
 
         protected File file;
+        protected BufferedImage bufImg; 
         protected int threshold;
         protected boolean debug;
 
@@ -43,6 +43,14 @@ public abstract class BlurCheckRunnable implements Runnable {
         public BlurCheckRunnable(File imageFile, int threshold, boolean debug){
             this.pass = null;
             this.file = imageFile;
+            this.threshold = threshold;
+            this.debug = debug;
+        }
+        
+        public BlurCheckRunnable(BufferedImage image, int threshold, boolean debug){
+            this.pass = null;
+            //this.file = imageFile;
+            this.bufImg = image;
             this.threshold = threshold;
             this.debug = debug;
         }

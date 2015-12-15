@@ -40,25 +40,38 @@ public class BlurCheckAwt extends BlurCheckRunnable{
 
         /** Theshold is the desired variance i.e. the higher the sharper ( 1500 is a good start) */ 
         public BlurCheckAwt(File imageFile, int threshold, boolean debug){
-                super(imageFile, threshold, debug);
-                try {                
-                        this.original=ImageIO.read(imageFile);
-                        dbg("image size = " + original.getWidth() + " " + original.getHeight());
-                } catch (IOException e) {
-                        e.printStackTrace();
-                }               
+            super(imageFile, threshold, debug);
+            try {                
+                this.original=ImageIO.read(imageFile);
+                dbg("image size = " + original.getWidth() + " " + original.getHeight());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }               
+        }
+        
+        /**
+         * Constructor with BufferedImage (for when it has already been read, i.e., not from a file)
+         * 
+         * (Added by Seb - 15/12/2015)
+         * @param image: The buffered image to operate on
+         * @param threshold: The threshold value for sharpness (1500 is sensible)
+         * @param debug: Whether to produce debugging outputs
+         */
+        public BlurCheckAwt(BufferedImage image, int threshold, boolean debug) {
+            super(image, threshold, debug);
+            this.original = image; 
         }
     
         /** Executes the test. Can run as a thread but should be quite fast anyway */
         @Override
-        public void run(){
-                BufferedImage blackAndWhiteImage = convertImageToGrey(original);
-                BufferedImage laplaceImage = convolve(blackAndWhiteImage, LAPLACE_KERNEL);
-                if (this.debug){
-                    dump(blackAndWhiteImage, file.getName() + "-grey.jpg");
-                    dump(laplaceImage, file.getName() + "-laplace.jpg");
-                }
-                this.pass = getPassDecision(laplaceImage);
+        public void run() {
+            BufferedImage blackAndWhiteImage = convertImageToGrey(original);
+            BufferedImage laplaceImage = convolve(blackAndWhiteImage, LAPLACE_KERNEL);
+            if (this.debug){
+                dump(blackAndWhiteImage, file.getName() + "-grey.jpg");
+                dump(laplaceImage, file.getName() + "-laplace.jpg");
+            }
+            this.pass = getPassDecision(laplaceImage);
         }
 
         /** 
@@ -91,9 +104,9 @@ public class BlurCheckAwt extends BlurCheckRunnable{
         }
 
         private boolean getPassDecision( BufferedImage img ){
-                long variance = getVariance(img);
-                dbg("Variance is : " + variance);
-                return variance > threshold;
+            long variance = getVariance(img);
+            dbg("Variance is : " + variance);
+            return variance > threshold;
         }
 
         /** 
@@ -103,13 +116,13 @@ public class BlurCheckAwt extends BlurCheckRunnable{
         * @param fname the filename eg. "foo.jpg"
         */
         private void dump( BufferedImage img, String fname){
-                dbg("Dumping: " + fname);
-                try{
-                    ImageIO.write(img, "jpeg",new File(fname));
-                }
-                catch (IOException e){
-                    e.printStackTrace();
-                }
+            dbg("Dumping: " + fname);
+            try{
+                ImageIO.write(img, "jpeg",new File(fname));
+            }
+            catch (IOException e){
+                e.printStackTrace();
+            }
         }
 
         /** 
