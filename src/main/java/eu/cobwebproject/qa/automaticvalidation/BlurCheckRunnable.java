@@ -46,13 +46,11 @@ public abstract class BlurCheckRunnable implements Runnable {
             this.threshold = threshold;
             this.debug = debug;
         }
-        
-        public BlurCheckRunnable(BufferedImage image, int threshold, boolean debug){
-            this.pass = null;
-            //this.file = imageFile;
-            this.bufImg = image;
-            this.threshold = threshold;
+
+		public BlurCheckRunnable(int threshold, boolean debug) {
+			this.pass = null;
+			this.file = null;
+			this.threshold = threshold;
             this.debug = debug;
-        }
-    
+		}
 }

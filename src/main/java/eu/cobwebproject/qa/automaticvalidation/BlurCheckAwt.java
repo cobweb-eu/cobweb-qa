@@ -2,7 +2,6 @@ package eu.cobwebproject.qa.automaticvalidation;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.util.Vector;
 
 import java.awt.Graphics;
@@ -12,6 +11,7 @@ import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 
 import javax.imageio.ImageIO;
+
 
 
 /**
@@ -31,12 +31,13 @@ import javax.imageio.ImageIO;
 public class BlurCheckAwt extends BlurCheckRunnable{
         /*********/
         private BufferedImage original;
-
+        
         /** use this for debug messages for now */
         @Override
         protected void dbg(String msg){
             System.out.println(msg);
         }
+        
 
         /** Theshold is the desired variance i.e. the higher the sharper ( 1500 is a good start) */ 
         public BlurCheckAwt(File imageFile, int threshold, boolean debug){
@@ -58,7 +59,7 @@ public class BlurCheckAwt extends BlurCheckRunnable{
          * @param debug: Whether to produce debugging outputs
          */
         public BlurCheckAwt(BufferedImage image, int threshold, boolean debug) {
-            super(image, threshold, debug);
+        	super(threshold, debug);            
             this.original = image; 
         }
     
@@ -67,9 +68,10 @@ public class BlurCheckAwt extends BlurCheckRunnable{
         public void run() {
             BufferedImage blackAndWhiteImage = convertImageToGrey(original);
             BufferedImage laplaceImage = convolve(blackAndWhiteImage, LAPLACE_KERNEL);
-            if (this.debug){
-                dump(blackAndWhiteImage, file.getName() + "-grey.jpg");
-                dump(laplaceImage, file.getName() + "-laplace.jpg");
+            if (this.debug) {
+            	String fileNameBase =  file == null ? "imagebuffer" : file.getName();
+                dump(blackAndWhiteImage, fileNameBase + "-grey.jpg");
+                dump(laplaceImage, fileNameBase + "-laplace.jpg");
             }
             this.pass = getPassDecision(laplaceImage);
         }
