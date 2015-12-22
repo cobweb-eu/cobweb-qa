@@ -56,8 +56,12 @@ public class LineOfSightTest extends TestCase{
         assertEquals(45.0, result[4]);
     }
     
+    
+    /**
+     * Uses new Raster reading
+     */
     @Test
-    public void testRasterClassLoading() {
+    public void testCompareRasters() {
     	URL asciiFile1 = this.getClass().getResource("surfaceModel.txt");
     	String testFile1 = asciiFile1.getFile().toString(); 	// this is the original surface model Sam provided
     	
