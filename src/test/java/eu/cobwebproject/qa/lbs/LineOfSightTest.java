@@ -12,6 +12,7 @@ public class LineOfSightTest extends TestCase{
     public void testLineOfSight() {
         URL url = this.getClass().getResource("surfaceModel.txt");
         RasterReader rr = new RasterReader(url.getFile().toString());
+        //Raster rast = RasterReader.ReadRaster(url.getFile().toString());
         
         double headerData[] = new double[6];
         
@@ -42,7 +43,7 @@ public class LineOfSightTest extends TestCase{
                 tilt,
                 myHeight);
         
-        double []result = new double[5];
+        double []result;// = new double[5];
         
         result = loS.getMyLoSResult();
         
@@ -53,4 +54,53 @@ public class LineOfSightTest extends TestCase{
         assertEquals(289123.0, result[3]);
         assertEquals(45.0, result[4]);
     }
+    
+    @Test
+    public void testCompareDataset() {
+    	URL url = this.getClass().getResource("surfaceModelNRW.asc");
+    	//Raster rast = RasterReader.ReadRaster(url.getFile());
+    	
+    	RasterReader rr = new RasterReader(url.getFile().toString());
+        //Raster rast = RasterReader.ReadRaster(url.getFile().toString());
+        
+        double headerData[] = new double[6];
+        
+        headerData = rr.getASCIIHeader();
+        
+        double surfaceModel[][] = new double[(int) headerData[0]][(int) headerData[1]];
+        
+        surfaceModel = rr.getASCIIData();
+
+        Parameters parameters = new Parameters((int)headerData[4], (int)headerData[0], 
+                (int)headerData[1], headerData[2], headerData[3], headerData[5]);
+
+    	
+        double easting = 265114.674984; 
+        double northing = 289276.72543;
+    	
+        double bearing = 0;
+        double tilt = -1;
+        double myHeight = 1.5;
+        double myCoords[] = new double[2];
+        
+        myCoords[0] = easting;
+        myCoords[1] = northing; 
+        
+        LineOfSightCoordinates loS = new LineOfSightCoordinates(
+                myCoords,
+                surfaceModel,
+                parameters,
+                bearing,
+                tilt,
+                myHeight);
+        
+        double []result;// = new double[5];
+        
+        result = loS.getMyLoSResult();
+        System.out.println("result " + result[0] + " " + result[1] + " " + result[2] + " " + result[3] + " " + result[4]);
+        
+     
+    }
+    
+ 
 }

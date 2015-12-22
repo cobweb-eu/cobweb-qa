@@ -7,6 +7,8 @@ import java.io.IOException;
  * 
  * @author Sam Meek
  * A class to read in an ESRI grid and extract the header information
+ * 
+ * This is in desperate need of a refactor and sanitise... (Seb - EnvSys)
  *
  */
 
@@ -193,6 +195,25 @@ public class RasterReader {
 	 */
 	public double[] getASCIIHeader(){
 		return headerData;
+	}
+	
+	/**
+	 * Static function that reads a raster from a given file name and
+	 * returns a Raster class with parameters and data set
+	 * 
+	 * @param fileName
+	 * @return Raster
+	 */
+	public static Raster ReadRaster(String fromFileName) {
+		
+		 double[] header = getRasterHeader(fromFileName);
+		 
+	     Parameters parameters = new Parameters((int)header[4], (int)header[0], 
+	                (int)header[1], header[2], header[3], header[5]);
+
+	     double[][] surfaceModel = inputASCIIData(fromFileName);
+	     return new Raster(parameters, surfaceModel);
+	     
 	}
 	
 }
