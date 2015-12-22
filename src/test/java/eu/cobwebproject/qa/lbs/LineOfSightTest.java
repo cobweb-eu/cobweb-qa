@@ -9,6 +9,9 @@ import junit.framework.TestCase;
 
 public class LineOfSightTest extends TestCase{
     
+	/**
+	 * Uses old RasterReader class
+	 */
     @Test
     public void testLineOfSight() {
         URL url = this.getClass().getResource("surfaceModel.txt");

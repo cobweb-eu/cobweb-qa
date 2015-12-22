@@ -5,13 +5,13 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class Raster {
-	private Parameters params;
-	private double[][] surfaceModel;
-	private String fileName = null;
+	private Parameters params;			// The parameters of the data (e.g., rows, cols) 
+	private double[][] surfaceModel;	// The actual surface model data
+	private String fileName = null;		// the fileName if we did the parseing
 
 	/**
 	 * Construct a raster with the parameters and data already parsed.
-	 * note: The String fileName constructor is preferred. 
+	 * note: The String file constructor is preferred. 
 	 * 
 	 * @param p A parsed parsed Parameter object
 	 * @param surfaceModel The surface model as a 2d double array
@@ -25,7 +25,7 @@ public class Raster {
 	 * Constructor returns a Raster parsed from the file path specified as string
 	 * 
 	 * @param file A String of the path to the file to parse
-	 * @throws IOException If the file cant be found or anything else goes wrong whilst reading
+	 * @throws IOException If the file can't be found or anything else goes wrong whilst reading
 	 */
 	public Raster(String file) throws IOException {
 		this.fileName = file;						// set the file name
@@ -53,76 +53,53 @@ public class Raster {
 	}
 	
 	/**
-	 * Private function to read the raster header data
+	 * Private function to read the raster header data and return
+	 * it as a double array (number of columns, number of rows, 
+	 * X lower corner, Y lower corner, the cell size, no data value)
 	 * 
-	 * @return an array of doubles containing the ascii header data
+	 * @return an array of doubles containing the ascii header data 
 	 * @throws IOException if there is a problem reading the file
 	 */
 	private double[] readRasterHeader() throws IOException {
 		BufferedReader br = new BufferedReader(new FileReader(fileName));
-		String DSMline = null;
-		
-		double var;
+		String DSMline;
+	
 		double[] headerData = new double[6];
 		
 		try {
-			for(int i = 0; i < 6; i++){
-							
+			
+			for(int i = 0; i < 6; i++) {				
 				DSMline = br.readLine();
-				
 				char[] buffer = new char[DSMline.length()];
-				String s = null;
 				
 				switch (i) {
-				case 0: 
-					
+				case 0: 					
 					DSMline.getChars(6,DSMline.length(), buffer, 0);
-					s = String.valueOf(buffer);
-					var = Double.parseDouble(s);
-					headerData[i] = var;
-					break;
-					
-				case 1: 
-			
+					headerData[i] = Double.parseDouble(String.valueOf(buffer));
+					break;	
+				case 1: 			
 					DSMline.getChars(6,DSMline.length(), buffer, 0);
-					s = String.valueOf(buffer);
-					var = Double.parseDouble(s);
-					headerData[i] = var;
+					headerData[i] = Double.parseDouble(String.valueOf(buffer));
 					break;
-				
-				case 2: 
-					
+				case 2: 					
 					DSMline.getChars(9,DSMline.length(), buffer, 0);
-					s = String.valueOf(buffer);
-					var = Double.parseDouble(s);
-					headerData[i] = var;
+					headerData[i] = Double.parseDouble(String.valueOf(buffer));
 					break;
-					
-				case 3: 
-					
+				case 3: 					
 					DSMline.getChars(9,DSMline.length(), buffer, 0);
-					s = String.valueOf(buffer);
-					var = Double.parseDouble(s);
-					headerData[i] = var;
+					headerData[i] = Double.parseDouble(String.valueOf(buffer));
 					break;
-					
-				case 4: 
-					
+				case 4: 					
 					DSMline.getChars(8,DSMline.length(), buffer, 0);
-					s = String.valueOf(buffer);
-					var = Double.parseDouble(s);
-					headerData[i] = var;
+					headerData[i] = Double.parseDouble(String.valueOf(buffer));
 					break;
-					
-				case 5: 
-					
+				case 5: 					
 					DSMline.getChars(12,DSMline.length(), buffer, 0);
-					s = String.valueOf(buffer);
-					var = Double.parseDouble(s);
-					headerData[i] = var;
+					headerData[i] = Double.parseDouble(String.valueOf(buffer));
 					break;						
 				}
 			}
+			
 		} finally {
 			br.close();
 		}
@@ -137,17 +114,18 @@ public class Raster {
 	 * @throws IOException If there is a problem reading from the file
 	 */
 	private double[][] readAsciiData() throws IOException {
-		double[] headerData = readRasterHeader();
 		String DSMline;
 		
-		BufferedReader br = new BufferedReader(new FileReader(fileName));
-		// skip header
-		for(int i = 0; i < 6; i++) {
-			br.readLine();
-		} 
-				
+		// read the header data and instantiate array for surface model data
+		double[] headerData = readRasterHeader();
 		double[][] ASCIIData = new double[(int) headerData[0]][(int) headerData[1]];
-		try {
+		
+		// open the file and skip the header
+		BufferedReader br = new BufferedReader(new FileReader(fileName));
+		for(int i = 0; i < 6; i++) 
+			br.readLine();			
+		
+		try { // read the data	
 			for(int i = 0;i < headerData[0];i++) {
 				DSMline = br.readLine();
 				String [] temp = new String[(int) headerData[1]];
@@ -156,7 +134,7 @@ public class Raster {
 					ASCIIData[i][j] = Double.parseDouble(temp[j]);				
 			 	}
 			}
-		} finally {
+		} finally {	// close even if error thrown
 			br.close();
 		}
 		
