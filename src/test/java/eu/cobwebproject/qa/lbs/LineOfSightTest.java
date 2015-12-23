@@ -2,7 +2,6 @@ package eu.cobwebproject.qa.lbs;
 
 import java.io.IOException;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import junit.framework.TestCase;
@@ -16,21 +15,17 @@ public class LineOfSightTest extends TestCase {
 	private double easting, northing, bearing, tilt, myHeight;
 	private double[] result1, result2;
 	private LineOfSightCoordinates loS;
-	private Raster raster1;
-	private Raster raster2;
-
-	@Before
-	public void setUp() throws IOException {    	
-		raster1 = new Raster(fileFromResource(RASTER1_RESOURCE));
-		raster2 = new Raster(fileFromResource(RASTER2_RESOURCE));
-	}
 	
     /**
      * Compares the results of running the same tests across different rasters
      * for location in field (flat-ish)
+     * @throws IOException 
      */
     @Test
-    public void testCompareRastersField() {    	
+    public void testCompareRastersField() throws IOException {
+    	Raster raster1 = new Raster(fileFromResource(RASTER1_RESOURCE));
+    	Raster raster2 = new Raster(fileFromResource(RASTER2_RESOURCE));
+    	
     	// set up and run test conditions for location in field (flat-ish)
     	easting = 265114.674984; 
         northing = 289276.72543;
@@ -64,8 +59,10 @@ public class LineOfSightTest extends TestCase {
     }
     
     @Test
-    public void testSamsLocation() {
+    public void testSamsLocation() throws IOException {
      	// set up and run test conditions for sam's location 	
+    	Raster raster1 = new Raster(fileFromResource(RASTER1_RESOURCE));
+    	
         easting = 265365;
         northing = 289115;
         bearing = 0;
