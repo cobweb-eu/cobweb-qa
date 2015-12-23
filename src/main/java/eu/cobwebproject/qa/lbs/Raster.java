@@ -117,7 +117,6 @@ public class Raster {
 	 * @throws IOException If there is a problem reading from the file
 	 */
 	private double[][] readAsciiData() throws IOException {
-		String DSMline;
 		
 		// read the header data and instantiate array for surface model data
 		double[] headerData = readRasterHeader();
@@ -130,9 +129,7 @@ public class Raster {
 		
 		try { // read the data	
 			for(int i = 0;i < headerData[0];i++) {
-				DSMline = br.readLine();
-				String [] temp = new String[(int) headerData[1]];
-				temp = DSMline.split("[ ]+");
+				String[] temp = br.readLine().split("[ ]+");
 				for(int j = 0;j < headerData[1];j++) {
 					ASCIIData[i][j] = Double.parseDouble(temp[j]);				
 			 	}
