@@ -5,9 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class Raster {
-	private Parameters params;			// The parameters of the data (e.g., rows, cols) 
-	private double[][] surfaceModel;	// The actual surface model data
-	private String fileName = null;		// the fileName if we did the parseing
+	private final Parameters params;		// The parameters of the data (e.g., rows, cols) 
+	private final double[][] surfaceModel;	// The actual surface model data
+	private final String fileName;			// the fileName if we did the parseing
 
 	/**
 	 * Construct a raster with the parameters and data already parsed.
@@ -19,6 +19,7 @@ public class Raster {
 	public Raster(Parameters p, double[][] surfaceModel) {
 		this.params = p;
 		this.surfaceModel = surfaceModel;
+		this.fileName = null;
 	}
 	
 	/**
