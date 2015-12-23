@@ -6,6 +6,12 @@ import org.junit.Test;
 
 import junit.framework.TestCase;
 
+/**
+ * Test cases for the line of sight algorithm
+ * 
+ * @author Sebastian Clarke - Environment Systems - sebastian.clarke@envsys.co.uk
+ *
+ */
 public class LineOfSightTest extends TestCase {
 	
 	private static final double ACCURACY = 0.05;

@@ -5,9 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class Raster {
-	private final Parameters params;		// The parameters of the data (e.g., rows, cols) 
+	private final Parameters params;			// The parameters of the data (e.g., rows, cols) 
 	private final double[][] surfaceModel;	// The actual surface model data
-	private final String fileName;			// the fileName if we did the parseing
+	private final String fileName;				// the fileName if we did the parseing
 
 	/**
 	 * Construct a raster with the parameters and data already parsed.
@@ -31,15 +31,19 @@ public class Raster {
 	public Raster(String file) throws IOException {
 		this.fileName = file;	
 		// read and parse header from filename to parameters
-		double[] headerData = readRasterHeader();	
-		this.params = new Parameters((int) headerData[4], 
-									 (int) headerData[0], 
-									 (int) headerData[1], 
-									 headerData[2], 
-									 headerData[3], 
-									 headerData[5]);
-		// read and parse surface data from filename
-		this.surfaceModel = readAsciiData();	
+		BufferedReader br = new BufferedReader(new FileReader(fileName));
+		try {
+			double[] headerData = Raster.consumeRasterHeader(br);	
+			this.params = new Parameters((int) headerData[4], 
+										 (int) headerData[0], 
+										 (int) headerData[1], 
+										 headerData[2], 
+										 headerData[3], 
+										 headerData[5]);
+			this.surfaceModel = Raster.consumeAsciiData(br, params.nCols, params.nRows);
+		} finally {
+			br.close();
+		}
 	}
 	
 	/**
@@ -59,83 +63,68 @@ public class Raster {
 	}
 	
 	/**
-	 * Private function to read the raster header data and return
-	 * it as a double array (number of columns, number of rows, 
-	 * X lower corner, Y lower corner, the cell size, no data value)
-	 * 
-	 * @return an array of doubles containing the ascii header data 
-	 * @throws IOException if there is a problem reading the file
+	 * Private static function to read the raster header data from an open
+	 * BufferedReader and return it as an array of doubles. This does
+	 * not close the buffered reader stream.
+	 *  
+	 * @param br The opened buffered reader to consume the header from
+	 * @return an array of doubles containing the ascii header data
+	 * @throws IOException if there is a problem reading from the bufferedReader 
 	 */
-	private double[] readRasterHeader() throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(fileName));		
-	
+	private static double[] consumeRasterHeader(BufferedReader br) throws IOException {
 		double[] headerData = new double[6];
-		
-		try {
 			
-			for(int i = 0; i < 6; i++) {				
-				int skip = 0;	// chars to skip before value
-				
-				switch (i) {
-				case 0:
-					skip = 6;
-					break;	
-				case 1:
-					skip = 6;
-					break;
-				case 2: 	
-					skip = 9;
-					break;
-				case 3:
-					skip = 9;
-					break;
-				case 4: 	
-					skip = 8;
-					break;
-				case 5: 	
-					skip = 12;
-					break;						
-				}
+		for(int i = 0; i < 6; i++) {				
+			int skip = 0;	// chars to skip before value
 			
-				String DSMline = br.readLine();
-				char[] buffer = new char[DSMline.length()];
-				DSMline.getChars(skip,DSMline.length(), buffer, 0);
-				headerData[i] = Double.parseDouble(String.valueOf(buffer));
+			switch (i) {
+			case 0:
+				skip = 6;
+				break;	
+			case 1:
+				skip = 6;
+				break;
+			case 2: 	
+				skip = 9;
+				break;
+			case 3:
+				skip = 9;
+				break;
+			case 4: 	
+				skip = 8;
+				break;
+			case 5: 	
+				skip = 12;
+				break;						
 			}
-			
-		} finally {
-			br.close();
-		}
 		
+			String DSMline = br.readLine();
+			char[] buffer = new char[DSMline.length()];
+			DSMline.getChars(skip,DSMline.length(), buffer, 0);
+			headerData[i] = Double.parseDouble(String.valueOf(buffer));
+		}
+			
 		return headerData;
 	}
 	
 	/**
-	 * Private function to read the surface model raster from the ascii file
+	 * Private static function to read the surface model raster from an opened
+	 * BufferedReader. This does not close the BufferedReader object
 	 * 
+	 * @param br: The opened BufferedReader
+	 * @param cols: The number of columns in the dataset
+	 * @param rows: The number of rows in the dataset
 	 * @return a 2d array of doubles representing the height field
 	 * @throws IOException If there is a problem reading from the file
 	 */
-	private double[][] readAsciiData() throws IOException {
+	private static double[][] consumeAsciiData(BufferedReader br, int cols, int rows) throws IOException {	
+		double[][] ASCIIData = new double[cols][rows];
 		
-		// read the header data and instantiate array for surface model data
-		double[] headerData = readRasterHeader();
-		double[][] ASCIIData = new double[(int) headerData[0]][(int) headerData[1]];
-		
-		// open the file and skip the header
-		BufferedReader br = new BufferedReader(new FileReader(fileName));
-		for(int i = 0; i < 6; i++) 
-			br.readLine();	// skip	
-		
-		try { // read the data	
-			for(int i = 0;i < headerData[0];i++) {
-				String[] temp = br.readLine().split("[ ]+");
-				for(int j = 0;j < headerData[1];j++) {
-					ASCIIData[i][j] = Double.parseDouble(temp[j]);				
-			 	}
-			}
-		} finally {	// close even if error thrown
-			br.close();
+		for(int i = 0;i < cols;i++) {
+			String[] temp = br.readLine().split("[ ]+");
+			for(int j = 0;j < rows;j++) {
+				ASCIIData[i][j] = Double.parseDouble(temp[j]);				
+		 	}
 		}
 		
 		return ASCIIData;
