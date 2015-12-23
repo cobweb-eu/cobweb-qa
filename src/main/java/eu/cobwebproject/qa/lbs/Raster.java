@@ -29,12 +29,17 @@ public class Raster {
 	 * @throws IOException If the file can't be found or anything else goes wrong whilst reading
 	 */
 	public Raster(String file) throws IOException {
-		this.fileName = file;						// set the file name
-		
-		double[] headerData = readRasterHeader();	// read from the file
-		this.params = new Parameters((int)headerData[4], (int)headerData[0], 
-                (int)headerData[1], headerData[2], headerData[3], headerData[5]);
-		this.surfaceModel = readAsciiData();		// read from the file
+		this.fileName = file;	
+		// read and parse header from filename to parameters
+		double[] headerData = readRasterHeader();	
+		this.params = new Parameters((int) headerData[4], 
+									 (int) headerData[0], 
+									 (int) headerData[1], 
+									 headerData[2], 
+									 headerData[3], 
+									 headerData[5]);
+		// read and parse surface data from filename
+		this.surfaceModel = readAsciiData();	
 	}
 	
 	/**
@@ -124,7 +129,7 @@ public class Raster {
 		// open the file and skip the header
 		BufferedReader br = new BufferedReader(new FileReader(fileName));
 		for(int i = 0; i < 6; i++) 
-			br.readLine();			
+			br.readLine();	// skip	
 		
 		try { // read the data	
 			for(int i = 0;i < headerData[0];i++) {
