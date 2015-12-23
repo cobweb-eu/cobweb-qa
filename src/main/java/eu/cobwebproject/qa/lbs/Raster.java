@@ -4,6 +4,13 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
+/**
+ * Encapsulates the data about a raster with utility functions to read
+ * the raster from an ESRI ASCII grid
+ * 
+ * @author Sebastian Clarke - Environment Systems - sebastian.clarke@envsys.co.uk
+ *
+ */
 public class Raster {
 	private final Parameters params;			// The parameters of the data (e.g., rows, cols) 
 	private final double[][] surfaceModel;	// The actual surface model data
