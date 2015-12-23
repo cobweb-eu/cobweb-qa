@@ -113,8 +113,8 @@ public class LineOfSightTest extends TestCase {
         double lastDistance = 1000000;
         //double lastHeight = 0;
         
-        for(int i = 0; i < 5; i++) {
-        	tilt = (i*-5)-1;
+        for(int i = 0; i < 8; i++) {
+        	tilt = (i*-10)-1;
         	System.out.println("Testing with tilt: " + tilt);
         	loS = new LineOfSightCoordinates(
                     new double[]{easting,northing},
@@ -126,7 +126,45 @@ public class LineOfSightTest extends TestCase {
             
             double[] result = loS.getMyLoSResult();
             System.out.println(LineOfSightCoordinates.resultToString(result));
-            assertTrue(result[0] < lastDistance);
+            assertTrue(result[0] <= lastDistance);
+            lastDistance = result[0];
+        }
+    }
+    
+    /**
+     * Tests that the height (of user) remains constant when only
+     * the tilt changes. It should do as it is simply the height
+     * of the surfaceModel at the user location, with a standard offset applied
+     * @throws IOException 
+     */
+    @Test
+    public void testHeightConstantWhenTiltChanges() throws IOException {
+    	Raster nrwHeightMap = new Raster(fileFromResource(RASTER2_RESOURCE));
+    	
+    	easting = 265114.674984; 					
+        northing = 289276.72543;
+        bearing = 0;
+        tilt = -1;
+        myHeight = 1.5;
+        
+        double lastHeight = 0;
+        
+        for(int i = 0; i < 8; i++) {
+        	tilt = (i*-10)-1;
+        	System.out.println("Testing with tilt: " + tilt);
+        	loS = new LineOfSightCoordinates(
+                    new double[]{easting,northing},
+                    nrwHeightMap.getSurfaceModel(),
+                    nrwHeightMap.getParams(),
+                    bearing,
+                    tilt,
+                    myHeight);
+            
+            double[] result = loS.getMyLoSResult();
+            System.out.println(LineOfSightCoordinates.resultToString(result));
+            if(i>0) 
+            	assertTrue(result[1] == lastHeight);
+            lastHeight = result[1];
         }
     }
     
