@@ -95,6 +95,38 @@ public class LineOfSightTest extends TestCase {
         //System.out.println("result2: " + result2[0] + " " + result2[1] + " " + result2[2] + " " + result2[3] + " " + result2[4]);
     }
     
+    /**
+     * Tests that the line of sight algorithm responds sensibly
+     * to changes, e.g., if you look down, does it get shorter?
+     * @throws IOException if problem reading raster
+     */
+    @Test
+    public void testShorterLookingDown() throws IOException {
+    	Raster nrwHeightMap = new Raster(fileFromResource(RASTER2_RESOURCE));
+    	
+    	easting = 265114.674984; 					
+        northing = 289276.72543;
+        bearing = 0;
+        tilt = -1;
+        myHeight = 1.5;
+        
+        for(int i = 0; i < 5; i++) {
+        	tilt = (i*-5)-1;
+        	System.out.println("Testing with tilt: " + tilt);
+        	loS = new LineOfSightCoordinates(
+                    new double[]{easting,northing},
+                    nrwHeightMap.getSurfaceModel(),
+                    nrwHeightMap.getParams(),
+                    bearing,
+                    tilt,
+                    myHeight);
+            
+            double[] result = loS.getMyLoSResult();
+            System.out.println(LineOfSightCoordinates.resultToString(result));
+        }
+    }
+    
+    
     private String fileFromResource(String resourceName) {
     	return this.getClass().getResource(resourceName).getFile().toString();
 	}
