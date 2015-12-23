@@ -17,9 +17,9 @@ public class Raster {
 	 * @param surfaceModel The surface model as a 2d double array
 	 */
 	public Raster(Parameters p, double[][] surfaceModel) {
+		this.fileName = null;
 		this.params = p;
 		this.surfaceModel = surfaceModel;
-		this.fileName = null;
 	}
 	
 	/**
@@ -67,43 +67,40 @@ public class Raster {
 	 * @throws IOException if there is a problem reading the file
 	 */
 	private double[] readRasterHeader() throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(fileName));
-		String DSMline;
+		BufferedReader br = new BufferedReader(new FileReader(fileName));		
 	
 		double[] headerData = new double[6];
 		
 		try {
 			
 			for(int i = 0; i < 6; i++) {				
-				DSMline = br.readLine();
-				char[] buffer = new char[DSMline.length()];
+				int skip = 0;	// chars to skip before value
 				
 				switch (i) {
-				case 0: 					
-					DSMline.getChars(6,DSMline.length(), buffer, 0);
-					headerData[i] = Double.parseDouble(String.valueOf(buffer));
+				case 0:
+					skip = 6;
 					break;	
-				case 1: 			
-					DSMline.getChars(6,DSMline.length(), buffer, 0);
-					headerData[i] = Double.parseDouble(String.valueOf(buffer));
+				case 1:
+					skip = 6;
 					break;
-				case 2: 					
-					DSMline.getChars(9,DSMline.length(), buffer, 0);
-					headerData[i] = Double.parseDouble(String.valueOf(buffer));
+				case 2: 	
+					skip = 9;
 					break;
-				case 3: 					
-					DSMline.getChars(9,DSMline.length(), buffer, 0);
-					headerData[i] = Double.parseDouble(String.valueOf(buffer));
+				case 3:
+					skip = 9;
 					break;
-				case 4: 					
-					DSMline.getChars(8,DSMline.length(), buffer, 0);
-					headerData[i] = Double.parseDouble(String.valueOf(buffer));
+				case 4: 	
+					skip = 8;
 					break;
-				case 5: 					
-					DSMline.getChars(12,DSMline.length(), buffer, 0);
-					headerData[i] = Double.parseDouble(String.valueOf(buffer));
+				case 5: 	
+					skip = 12;
 					break;						
 				}
+			
+				String DSMline = br.readLine();
+				char[] buffer = new char[DSMline.length()];
+				DSMline.getChars(skip,DSMline.length(), buffer, 0);
+				headerData[i] = Double.parseDouble(String.valueOf(buffer));
 			}
 			
 		} finally {
