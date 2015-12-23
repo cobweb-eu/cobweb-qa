@@ -56,7 +56,7 @@ public class LineOfSightCoordinates {
 			try{
 				myHeight = surfaceModel[(int)getMyy(coords[1],parameters)]
 						[(int)getMyx(coords[0], parameters)] + heightOffset;
-				System.out.println("myHeight " + myHeight);
+				
 				
 				}
 			catch (ArrayIndexOutOfBoundsException e){
