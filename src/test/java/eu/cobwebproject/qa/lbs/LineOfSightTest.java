@@ -110,6 +110,9 @@ public class LineOfSightTest extends TestCase {
         tilt = -1;
         myHeight = 1.5;
         
+        double lastDistance = 1000000;
+        //double lastHeight = 0;
+        
         for(int i = 0; i < 5; i++) {
         	tilt = (i*-5)-1;
         	System.out.println("Testing with tilt: " + tilt);
@@ -123,6 +126,7 @@ public class LineOfSightTest extends TestCase {
             
             double[] result = loS.getMyLoSResult();
             System.out.println(LineOfSightCoordinates.resultToString(result));
+            assertTrue(result[0] < lastDistance);
         }
     }
     
