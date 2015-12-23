@@ -141,4 +141,10 @@ public class Raster {
 		
 		return ASCIIData;
 	}
+	
+	public String toString() {
+		if(fileName != null)
+			return fileName;
+		return "Manually parsed raster";
+	}
 }
