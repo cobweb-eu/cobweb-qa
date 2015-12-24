@@ -9,8 +9,10 @@ package eu.cobwebproject.qa.lbs;
  *
  */
 public class LineOfSight {
+	private static final double STEP_SIZE = 0.1; // step size for LOS approximation algorithm
+	private static final double DRAW_DISTANCE = 500; // arbitrary limit in vision distance to limit iterations - 0.5km
+	
 	private Raster heightMap;
-
 	private double userHeight;
 	private double bearing;
 	private double tilt;
@@ -45,34 +47,39 @@ public class LineOfSight {
 	 * If it intersects then we return the results of the calculation. If we do not intersect we return null.
 	 * If we try and look outside of the height map coverage, we throw ArrayIndexOutOfBounds
 	 * 
+	 * Will return a cached result if no attributes have changed since last run
+	 * 
 	 * @return the result of LOS calculation (horizontal distance to target, height of user, x of target, y of target, height of target) or null if no intersection
 	 * @throws ArrayIndexOutOfBoundsException if we tried to look outside the heightmap coverage
 	 */
 	public double[] calculateLOS() throws ArrayIndexOutOfBoundsException {
-		if(currentResult != null) {
-			return currentResult;
-		}
+		if(currentResult != null) 
+			return currentResult;					// return a cached result if there is one
+		
+		double distance = userHeight; 				// start the distance down the line at userHeight
+		double delta = STEP_SIZE; 					// step size for the algorithm
+		double scanLimit = DRAW_DISTANCE; 			// draw distance
+		double theta = getBearingAsRadians();		// convert heading to height map radians
+		
 		double eyeHeight = userHeight + getSurfaceHeightForPoint(currentNorthing, currentEasting);
 		
-		double distance = userHeight; // starting distance, horizontal heading line
-		double delta = heightMap.getParams().getcellSize()/2.0;	// step amount - half a cell
-		double scanLimit = 1000; // arbitrary limit in vision distance to limit iterations
-		double theta = getBearingAsRadians();
-		
-		while (distance < scanLimit) {
-			double x = Math.cos(theta) * distance;
-			double y = Math.sin(theta) * distance;
+		while (distance < scanLimit) {				// scan down in step size until scan limit
+			double x = Math.cos(theta) * distance;	// x displacement
+			double y = Math.sin(theta) * distance; 	// y displacement
 			
+			// use the tilt to calculate ray height at this distance
 			double visionHeight = getRayHeight(distance, eyeHeight);
+			// get the height from the surface map at this displacement
 			double surfaceHeight = getSurfaceHeightForPoint(currentNorthing + y, currentEasting + x);
-			if(visionHeight <= surfaceHeight) {
-				// intersection
+			
+			if(visionHeight <= surfaceHeight) {		// intersection test
 				currentResult = new double[]{distance, eyeHeight, currentEasting + x, currentNorthing + y, surfaceHeight}; 
 				return currentResult;
 			}
-			distance += delta;
+			distance += delta;						// step the distance
 		}
-		return null;
+		
+		return null;								// we hit nothing
 	}
 	
 	// Configuration Setters

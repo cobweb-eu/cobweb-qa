@@ -191,11 +191,11 @@ public class LineOfSightTest extends TestCase {
                 myHeight);
     	double result[] = loS.getMyLoSResult();
     	
-    	System.out.println("Expected Distance: " + expectedDistance);
-    	System.out.println("Expected Y Offset: " + expectedYOffset);
-    	System.out.println("Actual Y Offset: " + String.valueOf(result[3]-northing));
+    	//System.out.println("Expected Distance: " + expectedDistance);
+    	//System.out.println("Expected Y Offset: " + expectedYOffset);
+    	//System.out.println("Actual Y Offset: " + String.valueOf(result[3]-northing));
     	
-    	System.out.println(LineOfSightCoordinates.resultToString(result));
+    	//System.out.println(LineOfSightCoordinates.resultToString(result));
     }
     
     public void testNewLOSImplementationFlatSurface() throws IOException {
@@ -204,15 +204,14 @@ public class LineOfSightTest extends TestCase {
     	easting = 265547.050156; 
     	northing = 289498.392446;
     	bearing = 0;
-    	tilt = -45;
+    	tilt = -1;
     	myHeight = 2;
     	
-    	final double expectedDistance = myHeight / (Math.cos(Math.toRadians(90+tilt)));
+    	
     	final double expectedYOffset = myHeight * Math.tan(Math.toRadians(90+tilt));
     	
     	double result[] = LineOfSight.Calculate(flatSurface, easting, northing, bearing, tilt, myHeight);
     	
-    	System.out.println("Expected Distance: " + expectedDistance);
     	System.out.println("Expected Y Offset: " + expectedYOffset);
     	System.out.println("Actual Y Offset: " + String.valueOf(result[3]-northing));
     	
