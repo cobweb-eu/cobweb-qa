@@ -41,13 +41,13 @@ public class Raster {
 		BufferedReader br = new BufferedReader(new FileReader(fileName));
 		try {
 			double[] headerData = Raster.consumeRasterHeader(br);	
-			this.params = new Parameters((int) headerData[4], 
+			this.params = new Parameters(headerData[4], 
 										 (int) headerData[0], 
 										 (int) headerData[1], 
 										 headerData[2], 
 										 headerData[3], 
 										 headerData[5]);
-			this.surfaceModel = Raster.consumeAsciiData(br, params.nCols, params.nRows);
+			this.surfaceModel = Raster.consumeAsciiData(br, params.getnCols(), params.getnRows());
 		} finally {
 			br.close();
 		}
@@ -67,6 +67,23 @@ public class Raster {
 	 */
 	public double[][] getSurfaceModel() {
 		return surfaceModel;
+	}
+	
+	/**
+	 * Gets the value from the surface model for given x,y cell index coords
+	 * 
+	 * @param x cell coordinate in rows
+	 * @param y cell coordinate in cols
+	 * 
+	 * @return the value from the surface model raster 
+	 */
+	public double getXY(int x, int y) {
+		if (y > params.getnCols() || y < 0)
+			throw new ArrayIndexOutOfBoundsException("Surface Y out of bounds");
+		if (x > params.getnRows() || x < 0)
+			throw new ArrayIndexOutOfBoundsException("Surface X out of bounds");
+		
+		return surfaceModel[y][x];
 	}
 	
 	/**

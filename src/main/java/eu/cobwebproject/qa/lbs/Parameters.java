@@ -2,12 +2,12 @@ package eu.cobwebproject.qa.lbs;
 
 public class Parameters {
 	
-	int cellSize;
-	int nCols;
-	int nRows;
-	double xlCorner;
-	double ylCorner;
-	double noData;
+	private double cellSize;
+	private int nCols;
+	private int nRows;
+	private double xlCorner;
+	private double ylCorner;
+	private double noData;
 	
 	
 	public Parameters(){
@@ -21,7 +21,7 @@ public class Parameters {
 	 * @param ylCorner the bottom corner of the Y of the array
 	 * @param noData the no data value
 	 */
-	public Parameters(int cellSize, int nCols, int nRows, double xlCorner, double ylCorner, double noData){
+	public Parameters(double cellSize, int nCols, int nRows, double xlCorner, double ylCorner, double noData){
 		
 		this.cellSize = cellSize;
 		this.nCols = nCols;
@@ -35,7 +35,7 @@ public class Parameters {
 	/**
 	 * @param cellSize sets the size of the cells
 	 */
-	public void setcellSize(int cellSize){
+	public void setcellSize(double cellSize){
 		
 		this.cellSize = cellSize;
 		
@@ -45,7 +45,7 @@ public class Parameters {
 	 * 
 	 * @return the size of the cell
 	 */
-	public int getcellSize(){
+	public double getcellSize(){
 		return cellSize;
 	}
 	

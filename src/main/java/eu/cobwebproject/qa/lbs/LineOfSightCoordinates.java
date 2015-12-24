@@ -64,7 +64,7 @@ public class LineOfSightCoordinates {
 				}
 			
 			dhTuple myResult = heightICanSee(makeAngle(theta), Math.toRadians(elevation), surfaceModel, 
-					parameters.cellSize, (int)getMyx(coords[0],parameters), (int)getMyy(coords[1],parameters), myHeight);
+					parameters.getcellSize(), (int)getMyx(coords[0],parameters), (int)getMyy(coords[1],parameters), myHeight);
 			
 			double []myData = new double[3];
 			
