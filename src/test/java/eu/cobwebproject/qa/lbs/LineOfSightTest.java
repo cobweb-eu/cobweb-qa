@@ -17,6 +17,7 @@ public class LineOfSightTest extends TestCase {
 	private static final double ACCURACY = 0.05;
 	private static final String RASTER1_RESOURCE = "surfaceModel.txt"; 		// this is the original surface model Sam provided
 	private static final String RASTER2_RESOURCE = "surfaceModelNRW.asc";	// this is the NRW 1M dataset of the same area
+	private static final String FLAT_RESOURCE = "surfaceModel_flat_1m.asc";	// sample flat dataset
 	
 	private double easting, northing, bearing, tilt, myHeight;
 	private double[] result1, result2;
@@ -166,6 +167,35 @@ public class LineOfSightTest extends TestCase {
             	assertTrue(result[1] == lastHeight);
             lastHeight = result[1];
         }
+    }
+    
+    public void testFlatSurface() throws IOException {
+    	Raster flatSurface = new Raster(fileFromResource(FLAT_RESOURCE));
+    	
+    	easting = 265547.050156; 
+    	northing = 289498.392446;
+    	bearing = 0;
+    	tilt = -45;
+    	myHeight = 1.5;
+    	
+    	final double expectedDistance = myHeight/(Math.cos(Math.toRadians(90+tilt)));
+    	final double expectedYOffset = myHeight * Math.tan(Math.toRadians(90+tilt));
+    	
+    	loS = new LineOfSightCoordinates(
+                new double[]{easting,northing},
+                flatSurface.getSurfaceModel(),
+                flatSurface.getParams(),
+                bearing,
+                tilt,
+                myHeight);
+    	double result[] = loS.getMyLoSResult();
+    	
+    	System.out.println("Expected Distance: " + expectedDistance);
+    	System.out.println("Expected Y Offset: " + expectedYOffset);
+    	System.out.println("Actual Y Offset: " + String.valueOf(result[3]-northing));
+    	
+    	System.out.println(LineOfSightCoordinates.resultToString(result));
+    	
     }
     
     

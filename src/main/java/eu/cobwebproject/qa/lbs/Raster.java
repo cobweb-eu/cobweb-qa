@@ -128,7 +128,7 @@ public class Raster {
 		double[][] ASCIIData = new double[cols][rows];
 		
 		for(int i = 0;i < cols;i++) {
-			String[] temp = br.readLine().split("[ ]+");
+			String[] temp = br.readLine().trim().split("[ ]+");
 			for(int j = 0;j < rows;j++) {
 				ASCIIData[i][j] = Double.parseDouble(temp[j]);				
 		 	}
