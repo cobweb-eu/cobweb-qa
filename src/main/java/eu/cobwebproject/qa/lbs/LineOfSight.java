@@ -1,12 +1,41 @@
 package eu.cobwebproject.qa.lbs;
 
 /**
- * Line of sight algorithm
+ * Class giving access to Line of Sight approximation algorithm
  * 
- * Re-implemented verion of Sam Meek's Line Of Sight calculation class
+ * This class will return an array of doubles with approximate 
+ * ray/surface intersection information given an origin position,
+ * orientation and height map.
  * 
- * @author Sebastian Clarke - Environment Systems - sebastian.clarke@envsys.co.uk	
- *
+ * How To Use The Class:
+ * 
+ * LineOfSight should be instantiated with a set of parameters 
+ * of required input values (see constructor) You can then call
+ * the instance.calculateLOS() method to calculate the intersection
+ * and return the values.
+ * 
+ * The instance can be safely updated with new values before 
+ * calling instance.calculateLOS() again.
+ * 
+ * Alternatively, you can call a throw away version using the 
+ * static convenience method LineOfSight.Calculate(...) which
+ * will return the results directly given the input parameters
+ *  
+ * Algorithmic Details:
+ * 
+ * An approximation algorithm is used to incrementally step
+ * along a 2d horizontal path in the direction of the heading.
+ * At each step, visible height is calculated according to the
+ * tilt and the distance of this step from the origin. Surface
+ * height is also extracted from the model at this step position.
+ * When the visible height is less than or equal to the surface
+ * height then we return resulting position information  
+ * 
+ * This is a re-implemented and slightly modified version of 
+ * of Sam Meek's original Line Of Sight calculation class.
+ * 
+ * @author Sebastian Clarke - 12/2015 - Environment Systems - sebastian.clarke@envsys.co.uk
+ * 	
  */
 public class LineOfSight {
 	private static final double STEP_SIZE = 0.1; // step size for LOS approximation algorithm
@@ -27,7 +56,7 @@ public class LineOfSight {
 	 * @param easting World easting of eye position
 	 * @param northing World northing of eye position
 	 * @param bearing Bearing in degrees from phone (heading)
-	 * @param tilt Tilt of the phone in degrees, 0 is horizontal
+	 * @param tilt Tilt of the eye in degrees, 0 is horizontal
 	 * @param userHeight Height of the phone/eye
 	 */
 	public LineOfSight(Raster heightMap, double easting, double northing, double bearing, double tilt, double userHeight) {
