@@ -6,14 +6,14 @@ import java.io.IOException;
 
 /**
  * Encapsulates the data about a raster with utility functions to read
- * the raster from an ESRI ASCII grid
+ * the raster from an Arc ASCII grid
  * 
  * @author Sebastian Clarke - Environment Systems - sebastian.clarke@envsys.co.uk
  *
  */
 public class Raster {
 	private final Parameters params;			// The parameters of the data (e.g., rows, cols) 
-	private final double[][] surfaceModel;	// The actual surface model data
+	private final double[][] surfaceModel;		// The actual surface model data
 	private final String fileName;				// the fileName if we did the parseing
 
 	/**
@@ -78,10 +78,10 @@ public class Raster {
 	 * @return the value from the surface model raster 
 	 */
 	public double getXY(int x, int y) {
-		if (y > params.getnCols() || y < 0)
-			throw new ArrayIndexOutOfBoundsException("Surface Y out of bounds");
-		if (x > params.getnRows() || x < 0)
-			throw new ArrayIndexOutOfBoundsException("Surface X out of bounds");
+		if (y >= params.getnCols() || y < 0)
+			throw new ArrayIndexOutOfBoundsException("Surface Y out of bounds: " + y);
+		if (x >= params.getnRows() || x < 0)
+			throw new ArrayIndexOutOfBoundsException("Surface X out of bounds: " + x);
 		
 		return surfaceModel[y][x];
 	}

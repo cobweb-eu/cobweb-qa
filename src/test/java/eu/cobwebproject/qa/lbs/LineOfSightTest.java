@@ -14,91 +14,199 @@ import junit.framework.TestCase;
  */
 public class LineOfSightTest extends TestCase {
 	
-	private static final double ACCURACY = 0.05;
+	private static final boolean DEBUG = false;
+	
+	private static final double ACCURACY = 0.2;
 	private static final String RASTER1_RESOURCE = "surfaceModel.txt"; 		// this is the original surface model Sam provided
 	private static final String RASTER2_RESOURCE = "surfaceModelNRW.asc";	// this is the NRW 1M dataset of the same area
 	private static final String FLAT_RESOURCE = "surfaceModel_flat_1m.asc";	// sample flat dataset
 	
-	private double easting, northing, bearing, tilt, myHeight;
-	private double[] result1, result2;
-	private LineOfSightCoordinates loS;
+	private double easting, northing, bearing, tilt, myHeight;				// test conditions
 	
+	/**
+	 * Tests the new Line Of Sight implementation using a flat surface
+	 * model at 1m height.
+	 * 
+	 * This will check that the intersection occurs roughly at the
+	 * predicted location and that the values returned are correct
+	 * 
+	 * @throws IOException If there was a problem reading the surface model
+	 */
+	@Test
+	public void testWithFlatSurface() throws IOException {
+		// Surface Model
+		Raster flatSurface = new Raster(fileFromResource(FLAT_RESOURCE));
+		double flatHeight = 1.0;	// the uniform height of the flat surface
+		
+		// Test Values
+		easting = 265547.050156; 
+		northing = 289498.392446;
+		bearing = 45;
+		tilt = -20;
+		myHeight = 2;
+		
+		printStartingConditions("Testing new LOS Implementation with flat surface model");
+		
+		// Calculate expected results
+		final double horizontalDisplacement = myHeight * Math.tan(Math.toRadians(90+tilt));
+		final double expectedXPosition = easting + Math.sin(Math.toRadians(bearing)) * horizontalDisplacement;
+		final double expectedYPosition = northing + Math.cos(Math.toRadians(bearing)) * horizontalDisplacement;
+		// Perform line of sight estimation - use static method for throw-away call
+		double result[] = LineOfSight.Calculate(flatSurface, easting, northing, bearing, tilt, myHeight);
+		dbg(LineOfSight.resultAsString(result));
+		assertAlmostEqual(expectedXPosition, result[2], 0.1);	// check within 10cm (approximation dependent on LineOfSight.stepSize)
+		assertAlmostEqual(expectedYPosition, result[3], 0.1);
+		assertEquals(result[4], flatHeight); 					// intersection height
+		assertEquals(result[1], flatHeight + myHeight);			// user height 
+		assertAlmostEqual(result[0], horizontalDisplacement, ACCURACY);		// horizontal distance
+	}
+	
+	/**
+	 * Tests LOS against the NRW surface model, standing in field, tilted at horizon.
+	 * 
+	 * Extensive test that tests headings in all quadrants with known
+	 * good values and responses as checked in QGIS.
+	 * 
+	 * @throws IOException if problem reading the raster
+	 */
+	public void testInFieldWithNRWDTM() throws IOException {
+        double expectedIntersectHeight, expectedX, expectedY, expectedDistance, expectedEyeHeight;
+        double[] result;
+		
+		// Set up initial test conditions
+		easting = 265114.674984;	// standing in a field 
+        northing = 289276.72543;	// standing in a field
+        bearing = 0;				// facing north
+        tilt = -0;					// angled at horizon
+        myHeight = 2;				// 2m tall
+        
+        // load raster and setup LineOfSight instance
+        Raster raster = new Raster(fileFromResource(RASTER2_RESOURCE));
+        LineOfSight los = new LineOfSight(raster, easting, northing, bearing, tilt, myHeight);
+        
+        expectedEyeHeight = myHeight + 72.42;  			// known for our position
+        expectedIntersectHeight = 74.65;				// correct for this orientation
+        expectedX = easting;
+        expectedY = 289286.02543;						// checked in qgis
+        expectedDistance = 9.3;   
+        printStartingConditions("Testing NRW DSM - standing in field facing north");
+        result = los.calculateLOS();
+        dbg(LineOfSight.resultAsString(result));
+        checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);
+       
+        los.setBearing(bearing = 45); 	
+        expectedIntersectHeight = 74.45;
+        expectedX = 265120.048995537;
+        expectedY = 289282.099441537;
+        expectedDistance = 7.6;
+        printStartingConditions("Testing NRW DSM - standing in field facing NE");
+        result = los.calculateLOS();
+        dbg(LineOfSight.resultAsString(result));
+        checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);
+        
+        los.setBearing(bearing = 90); 	
+        expectedIntersectHeight = 74.47;
+        expectedX = 265128.074984;
+        expectedY = northing;
+        expectedDistance = 13.4;
+        printStartingConditions("Testing NRW DSM - standing in field facing E");
+        result = los.calculateLOS();
+        dbg(LineOfSight.resultAsString(result));
+        checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);
+        
+        los.setBearing(bearing = 135); 	
+        expectedIntersectHeight = 74.58;
+        expectedX = 265145.0098649129;
+        expectedY = 289246.3905490871;
+        expectedDistance = 42.9;  
+        printStartingConditions("Testing NRW DSM - standing in field facing SE");
+        result = los.calculateLOS();
+        dbg(LineOfSight.resultAsString(result));
+        checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);
+        
+        los.setBearing(bearing = 180); 	 
+        printStartingConditions("Testing NRW DSM - standing in field facing South");
+        try {
+        	result = los.calculateLOS();
+        	fail("Expected to not intersect in bounds of height map");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        	assertEquals(e.getMessage(), "Surface Y out of bounds: 1000");
+        }
+    
+        los.setBearing(bearing = 225); 	 
+        printStartingConditions("Testing NRW DSM - standing in field facing SW");
+        try {
+        	result = los.calculateLOS();
+        	fail("Expected to not intersect in bounds of height map");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        	assertEquals(e.getMessage(), "Surface X out of bounds: -1");
+        }
+        
+        los.setBearing(bearing = 270);
+        expectedIntersectHeight = 74.57;
+        expectedX = 265075.974984;
+        expectedY = northing;
+        expectedDistance = 38.7;
+        printStartingConditions("Testing NRW DSM - standing in field facing West");
+        result = los.calculateLOS();
+        dbg(LineOfSight.resultAsString(result));
+        checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);
+        
+        los.setBearing(bearing = 315);
+        expectedIntersectHeight = 74.55;
+        expectedX = 265102.9370114323;
+        expectedY = 289288.46340256766;
+        expectedDistance = 16.6;
+        printStartingConditions("Testing NRW DSM - standing in field facing NW");
+        result = los.calculateLOS();
+        dbg(LineOfSight.resultAsString(result));
+        checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);
+        
+        los.setBearing(bearing = -45);
+        printStartingConditions("Testing NRW DSM - standing in field facing NW (negative bearing value)");
+        result = los.calculateLOS();
+        checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);
+	}
+		
     /**
-     * Compares the results of running the same tests across different rasters
-     * for location in field (flat-ish)
-     * @throws IOException 
+     * Tests the consistency of Line Of Sight on two rasters
+     * of the same location. DSM and DTM. Uses a test location
+     * in a field so results should be similar for both.
+     * 
+     * Confirms the results match within +- ACCURACY
+     * 
+     * @throws IOException If there was a problem reading the rasters 
      */
     @Test
     public void testCompareRastersField() throws IOException {
+    	// Load surface models
     	Raster raster1 = new Raster(fileFromResource(RASTER1_RESOURCE));
     	Raster raster2 = new Raster(fileFromResource(RASTER2_RESOURCE));
     	
-    	// set up and run test conditions for location in field (flat-ish)
+    	// Test conditions (starting in a flat-ish field)
     	easting = 265114.674984; 
         northing = 289276.72543;
-        bearing = 0;
-        tilt = -1;
-        myHeight = 1.5;
-       
-        // raster 1 (from sam)
-        loS = new LineOfSightCoordinates(
-                new double[]{easting,northing},
-                raster1.getSurfaceModel(),
-                raster1.getParams(),
-                bearing,
-                tilt,
-                myHeight);
-        result1 = loS.getMyLoSResult();
+        bearing = 0;	// facing north
+        tilt = -20;
+        myHeight = 2;
         
-        // raster 2 (nrw data)
-        loS = new LineOfSightCoordinates(
-                new double[]{easting,northing},
-                raster2.getSurfaceModel(),
-                raster2.getParams(),
-                bearing,
-                tilt,
-                myHeight);
-        result2 = loS.getMyLoSResult();
+        LineOfSight los = new LineOfSight(raster1, easting, northing, bearing, tilt, myHeight);
+        printStartingConditions("Testing Both surface models - standing in field facing north");
+        double[] result1 = los.calculateLOS();
+        los.setHeightMap(raster2);
+        double[] result2 = los.calculateLOS();
         
         for(int i = 0; i < 5; i++) {
         	assertAlmostEqual(result1[i], result2[i], ACCURACY);
-        }
-    }
-    
-    @Test
-    public void testSamsLocation() throws IOException {
-     	// set up and run test conditions for sam's location 	
-    	Raster raster1 = new Raster(fileFromResource(RASTER1_RESOURCE));
-    	
-        easting = 265365;
-        northing = 289115;
-        bearing = 0;
-        tilt = -1;
-        myHeight = 1.5;
-        
-        // raster 1 (from sam)
-        loS = new LineOfSightCoordinates(
-                new double[]{easting,northing},
-                raster1.getSurfaceModel(),
-                raster1.getParams(),
-                bearing,
-                tilt,
-                myHeight);
-        result1 = loS.getMyLoSResult();
-           
-        assertEquals(8.1, result1[0]);
-        assertEquals(49.43426, result1[1]);
-        assertEquals(265365.0, result1[2]);
-        assertEquals(289123.0, result1[3]);
-        assertEquals(45.0, result1[4]);
-     
-        //System.out.println("result1: " + result1[0] + " " + result1[1] + " " + result1[2] + " " + result1[3] + " " + result1[4]);
-        //System.out.println("result2: " + result2[0] + " " + result2[1] + " " + result2[2] + " " + result2[3] + " " + result2[4]);
+        }      
     }
     
     /**
      * Tests that the line of sight algorithm responds sensibly
      * to changes, e.g., if you look down, does it get shorter?
+     * 
+     * Also checks that the height for the user stays constant.
+     * 
      * @throws IOException if problem reading raster
      */
     @Test
@@ -112,118 +220,50 @@ public class LineOfSightTest extends TestCase {
         myHeight = 1.5;
         
         double lastDistance = 1000000;
-        //double lastHeight = 0;
+        double prevHeight = 0;
+        LineOfSight los = new LineOfSight(nrwHeightMap, easting, northing, bearing, tilt, myHeight);
         
         for(int i = 0; i < 8; i++) {
         	tilt = (i*-10)-1;
-        	System.out.println("Testing with tilt: " + tilt);
-        	loS = new LineOfSightCoordinates(
-                    new double[]{easting,northing},
-                    nrwHeightMap.getSurfaceModel(),
-                    nrwHeightMap.getParams(),
-                    bearing,
-                    tilt,
-                    myHeight);
-            
-            double[] result = loS.getMyLoSResult();
-            System.out.println(LineOfSightCoordinates.resultToString(result));
+        	los.setTilt(tilt);
+        	double[] result = los.calculateLOS();
             assertTrue(result[0] <= lastDistance);
+            if(i > 0) 
+            	assertEquals(result[1], prevHeight);
             lastDistance = result[0];
+            prevHeight = result[1];
         }
     }
     
-    /**
-     * Tests that the height (of user) remains constant when only
-     * the tilt changes. It should do as it is simply the height
-     * of the surfaceModel at the user location, with a standard offset applied
-     * @throws IOException 
-     */
-    @Test
-    public void testHeightConstantWhenTiltChanges() throws IOException {
-    	Raster nrwHeightMap = new Raster(fileFromResource(RASTER2_RESOURCE));
-    	
-    	easting = 265114.674984; 					
-        northing = 289276.72543;
-        bearing = 0;
-        tilt = -1;
-        myHeight = 1.5;
-        
-        double lastHeight = 0;
-        
-        for(int i = 0; i < 8; i++) {
-        	tilt = (i*-10)-1;
-        	System.out.println("Testing with tilt: " + tilt);
-        	loS = new LineOfSightCoordinates(
-                    new double[]{easting,northing},
-                    nrwHeightMap.getSurfaceModel(),
-                    nrwHeightMap.getParams(),
-                    bearing,
-                    tilt,
-                    myHeight);
-            
-            double[] result = loS.getMyLoSResult();
-            System.out.println(LineOfSightCoordinates.resultToString(result));
-            if(i>0) 
-            	assertTrue(result[1] == lastHeight);
-            lastHeight = result[1];
-        }
+       
+    private void printStartingConditions(String testName) {
+    	if(DEBUG) {
+	    	System.out.println(testName);
+	    	System.out.println("Test Position: " + String.valueOf(easting) + "," + String.valueOf(northing));
+	    	System.out.println("Test Heading: " + String.valueOf(bearing));
+	    	System.out.println("Test Tilt: " + String.valueOf(tilt));
+	    	System.out.println("Test User Height: " + String.valueOf(myHeight));
+    	}
     }
-    
-    @Test
-    public void testFlatSurface() throws IOException {
-    	Raster flatSurface = new Raster(fileFromResource(FLAT_RESOURCE));
-    	
-    	easting = 265547.050156; 
-    	northing = 289498.392446;
-    	bearing = 0;
-    	tilt = -45;
-    	myHeight = 2;
-    	
-    	final double expectedDistance = myHeight / (Math.cos(Math.toRadians(90+tilt)));
-    	final double expectedYOffset = myHeight * Math.tan(Math.toRadians(90+tilt));
-    	
-    	loS = new LineOfSightCoordinates(
-                new double[]{easting,northing},
-                flatSurface.getSurfaceModel(),
-                flatSurface.getParams(),
-                bearing,
-                tilt,
-                myHeight);
-    	double result[] = loS.getMyLoSResult();
-    	
-    	//System.out.println("Expected Distance: " + expectedDistance);
-    	//System.out.println("Expected Y Offset: " + expectedYOffset);
-    	//System.out.println("Actual Y Offset: " + String.valueOf(result[3]-northing));
-    	
-    	//System.out.println(LineOfSightCoordinates.resultToString(result));
-    }
-    
-    public void testNewLOSImplementationFlatSurface() throws IOException {
-    	Raster flatSurface = new Raster(fileFromResource(FLAT_RESOURCE));
-    	
-    	easting = 265547.050156; 
-    	northing = 289498.392446;
-    	bearing = 0;
-    	tilt = -1;
-    	myHeight = 2;
-    	
-    	
-    	final double expectedYOffset = myHeight * Math.tan(Math.toRadians(90+tilt));
-    	
-    	double result[] = LineOfSight.Calculate(flatSurface, easting, northing, bearing, tilt, myHeight);
-    	
-    	System.out.println("Expected Y Offset: " + expectedYOffset);
-    	System.out.println("Actual Y Offset: " + String.valueOf(result[3]-northing));
-    	
-    	System.out.println(LineOfSightCoordinates.resultToString(result));
-    }
-    
     
     private String fileFromResource(String resourceName) {
     	return this.getClass().getResource(resourceName).getFile().toString();
 	}
     
+    private static void checkResult(double[] result, double eyeHeight, double intersectHeight, double xCoord, double yCoord, double distance) {
+        assertEquals(result[1], eyeHeight);
+        assertEquals(result[4], intersectHeight);
+        assertAlmostEqual(result[2], xCoord, ACCURACY);
+        assertAlmostEqual(result[3], yCoord, ACCURACY);
+        assertAlmostEqual(result[0], distance, ACCURACY);
+    }
+    
     private static void assertAlmostEqual(double d1, double d2, double delta) {
     	assertTrue((d1-d2)<delta);
+    }
+    
+    private static void dbg(String msg) {
+    	if(DEBUG)
+    		System.out.println(msg);
     }
 }

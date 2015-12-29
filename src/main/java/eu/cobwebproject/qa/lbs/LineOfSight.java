@@ -34,12 +34,15 @@ package eu.cobwebproject.qa.lbs;
  * This is a re-implemented and slightly modified version of 
  * of Sam Meek's original Line Of Sight calculation class.
  * 
+ * @Todo Re-Factor the result object to a class
+ * 
  * @author Sebastian Clarke - 12/2015 - Environment Systems - sebastian.clarke@envsys.co.uk
  * 	
  */
+
 public class LineOfSight {
 	private static final double STEP_SIZE = 0.1; // step size for LOS approximation algorithm
-	private static final double DRAW_DISTANCE = 500; // arbitrary limit in vision distance to limit iterations - 0.5km
+	private static final double DRAW_DISTANCE = 1000; // arbitrary limit in vision distance to limit iterations - 0.5km
 	
 	private Raster heightMap;
 	private double userHeight;
@@ -48,14 +51,15 @@ public class LineOfSight {
 	private double currentNorthing;
 	private double currentEasting;
 	private double[] currentResult;
-	
+	private double stepSize;
+
 	/**
 	 * Construct a new LineOfSight check object
 	 * 
 	 * @param heightMap The heightMap to check LOS against
 	 * @param easting World easting of eye position
 	 * @param northing World northing of eye position
-	 * @param bearing Bearing in degrees from phone (heading)
+	 * @param bearing Bearing in degrees from device (heading)
 	 * @param tilt Tilt of the eye in degrees, 0 is horizontal
 	 * @param userHeight Height of the phone/eye
 	 */
@@ -66,6 +70,7 @@ public class LineOfSight {
 		this.bearing = bearing;
 		this.currentEasting = easting;
 		this.currentNorthing = northing;
+		this.stepSize = STEP_SIZE;
 		this.currentResult = null;
 	}
 	
@@ -86,7 +91,7 @@ public class LineOfSight {
 			return currentResult;					// return a cached result if there is one
 		
 		double distance = userHeight; 				// start the distance down the line at userHeight
-		double delta = STEP_SIZE; 					// step size for the algorithm
+		double delta = stepSize; 					// step size for the algorithm
 		double scanLimit = DRAW_DISTANCE; 			// draw distance
 		double theta = getBearingAsRadians();		// convert heading to height map radians
 		
@@ -110,35 +115,10 @@ public class LineOfSight {
 		
 		return null;								// we hit nothing
 	}
-	
-	// Configuration Setters
-	
-	public void setHeightMap(Raster heightMap) {
-		this.heightMap = heightMap;
-		this.currentResult = null;
-	}
-	public void setUserHeight(double userHeight) {
-		this.userHeight = userHeight;
-		this.currentResult = null;
-	}
-	public void setBearing(double bearing) {
-		this.bearing = bearing;
-		this.currentResult = null;
-	}
-	public void setTilt(double tilt) {
-		this.tilt = tilt;
-		this.currentResult = null;
-	}
-	public void setCurrentNorthing(double currentNorthing) {
-		this.currentNorthing = currentNorthing;
-		this.currentResult = null;
-	}
-	public void setCurrentEasting(double currentEasting) {
-		this.currentEasting = currentEasting;
-		this.currentResult = null;
-	}
-	
-	// Private utility functions
+
+	////////////////////////////
+	// PRIVATE UTIL FUNCTIONS //
+	////////////////////////////
 	
 	/**
 	 * Gets the Y Cell index for a world northing coordinate
@@ -148,7 +128,7 @@ public class LineOfSight {
 	 */
 	private int getYCell(double northing) {
 		double localY = northing - heightMap.getParams().getylCorner();	
-		int cellIndex = (int) Math.floor(localY / heightMap.getParams().getcellSize());
+		int cellIndex = (int) Math.ceil(localY / heightMap.getParams().getcellSize());
 		
 		return heightMap.getParams().getnCols() - cellIndex; // reverse indexing
 	}
@@ -161,7 +141,7 @@ public class LineOfSight {
 	 */
 	private int getXCell(double easting){
 		double localX = easting - heightMap.getParams().getxlCorner();
-		int cellIndex = (int) Math.floor(localX / heightMap.getParams().getcellSize());
+		int cellIndex = (int) Math.floor((localX / heightMap.getParams().getcellSize()));
 		
 		return cellIndex; // apparently no reverse indexing..
 	}
@@ -175,7 +155,7 @@ public class LineOfSight {
 	 * @return height from the cell for this coord
 	 */
 	private double getSurfaceHeightForPoint(double northing, double easting) {
-		return heightMap.getXY(getYCell(northing), getXCell(easting));
+		return heightMap.getXY(getXCell(easting),getYCell(northing));
 	}
 	
 	/**
@@ -190,13 +170,16 @@ public class LineOfSight {
 	/**
 	 * Gets the height of a ray from the eye at current tilt and given height and distance
 	 * @param distance the horizontal distance down the ray
+	 * @param eyeHeight the starting height of the ray origin
 	 * @return the vertical height of the line of sight ray
 	 */
 	private double getRayHeight(double distance, double eyeHeight) {
 		return (distance * Math.tan(Math.toRadians(tilt))) + eyeHeight;
 	}
  
-	// Public static helper convenience functions
+	//////////////////////////////////
+	// STATIC CONVENIENCE FUNCTIONS //
+	//////////////////////////////////
 	
 	/**
 	 * Does a one off calculation of Line of Sight
@@ -212,5 +195,73 @@ public class LineOfSight {
 	public static double[] Calculate(Raster heightMap, double easting, double northing, double bearing, double tilt, double userHeight) {
 		LineOfSight los = new LineOfSight(heightMap, easting, northing, bearing, tilt, userHeight);
 		return los.calculateLOS();
+	}
+	
+	/**
+	 * Gets the result array as a nice string
+	 *
+	 * @param result The result double array from LOS calculation
+	 * @return The result summarised as a string
+	 */
+	public static String resultAsString(double[] result) {
+		assert result.length == 5;
+		String resultString = "Distance:" + result[0];
+		resultString += " My Height:" + result[1];
+		resultString += " Intersect Point:" + result[2] + "," + result[3];
+		resultString += " Intersect Height:" + result[4];
+		return resultString;
+	}
+	
+	/////////////////////////
+	// GETTERS AND SETTERS //
+	/////////////////////////
+	
+	public void setHeightMap(Raster heightMap) {
+		this.heightMap = heightMap;
+		this.currentResult = null;
+	}
+	
+	public void setUserHeight(double userHeight) {
+		this.userHeight = userHeight;
+		this.currentResult = null;
+	}
+	
+	public void setBearing(double bearing) {
+		this.bearing = bearing;
+		this.currentResult = null;
+	}
+	
+	public void setTilt(double tilt) {
+		this.tilt = tilt;
+		this.currentResult = null;
+	}
+	
+	public void setCurrentNorthing(double currentNorthing) {
+		this.currentNorthing = currentNorthing;
+		this.currentResult = null;
+	}
+	
+	public void setCurrentEasting(double currentEasting) {
+		this.currentEasting = currentEasting;
+		this.currentResult = null;
+	}
+	
+	/**
+	 * Set the step size for the LOS approximation algorithm
+	 * 
+	 * @param newStepSize The new step size (in metres)
+	 */
+	public void setStepSize(double newStepSize) {
+		this.stepSize = newStepSize;
+		this.currentResult = null;
+	}
+	
+	/**
+	 * Gets the current step size for the LOS approximation algorithm
+	 * 
+	 * @return the current step size (in metres)
+	 */
+	public double getStepSize() {
+		return this.stepSize;
 	}
 }

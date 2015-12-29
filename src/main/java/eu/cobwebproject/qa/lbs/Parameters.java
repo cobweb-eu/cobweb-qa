@@ -13,6 +13,7 @@ public class Parameters {
 	public Parameters(){
 		
 	}
+	
 	/**
 	 * @param cellSize size of the cells
 	 * @param nCols the number of columns
