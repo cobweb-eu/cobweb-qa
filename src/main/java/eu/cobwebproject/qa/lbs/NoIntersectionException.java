@@ -8,5 +8,7 @@ package eu.cobwebproject.qa.lbs;
  *
  */
 public class NoIntersectionException extends IntersectionException {
-
+	public NoIntersectionException(String message) {
+		super(message);
+	}
 }

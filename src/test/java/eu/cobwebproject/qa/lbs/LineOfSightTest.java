@@ -32,9 +32,10 @@ public class LineOfSightTest extends TestCase {
 	 * predicted location and that the values returned are correct
 	 * 
 	 * @throws IOException If there was a problem reading the surface model
+	 * @throws IntersectionException If we did not intersect the surface model
 	 */
 	@Test
-	public void testWithFlatSurface() throws IOException {
+	public void testWithFlatSurface() throws IOException, IntersectionException {
 		// Surface Model
 		Raster flatSurface = new Raster(fileFromResource(FLAT_RESOURCE));
 		double flatHeight = 1.0;	// the uniform height of the flat surface
@@ -69,8 +70,9 @@ public class LineOfSightTest extends TestCase {
 	 * good values and responses as checked in QGIS.
 	 * 
 	 * @throws IOException if problem reading the raster
+	 * @throws IntersectionException if we unexpectedly did not intersect the DTM
 	 */
-	public void testInFieldWithNRWDTM() throws IOException {
+	public void testInFieldWithNRWDTM() throws IOException, IntersectionException {
         double expectedIntersectHeight, expectedX, expectedY, expectedDistance, expectedEyeHeight;
         double[] result;
 		
@@ -130,8 +132,8 @@ public class LineOfSightTest extends TestCase {
         try {
         	result = los.calculateLOS();
         	fail("Expected to not intersect in bounds of height map");
-        } catch (ArrayIndexOutOfBoundsException e) {
-        	assertEquals(e.getMessage(), "Surface Y out of bounds: 1000");
+        } catch (IntersectionException e) {
+        	// assert
         }
     
         los.setBearing(bearing = 225); 	 
@@ -139,9 +141,11 @@ public class LineOfSightTest extends TestCase {
         try {
         	result = los.calculateLOS();
         	fail("Expected to not intersect in bounds of height map");
-        } catch (ArrayIndexOutOfBoundsException e) {
+        } catch (IntersectionException e) {
+        	// assert
         	assertEquals(e.getMessage(), "Surface X out of bounds: -1");
         }
+     
         
         los.setBearing(bearing = 270);
         expectedIntersectHeight = 74.57;
@@ -177,9 +181,10 @@ public class LineOfSightTest extends TestCase {
      * Confirms the results match within +- ACCURACY
      * 
      * @throws IOException If there was a problem reading the rasters 
+	 * @throws IntersectionException if we unexpectedly did not intersect the DTM
      */
     @Test
-    public void testCompareRastersField() throws IOException {
+    public void testCompareRastersField() throws IOException, IntersectionException {
     	// Load surface models
     	Raster raster1 = new Raster(fileFromResource(RASTER1_RESOURCE));
     	Raster raster2 = new Raster(fileFromResource(RASTER2_RESOURCE));
@@ -209,9 +214,10 @@ public class LineOfSightTest extends TestCase {
      * Also checks that the height for the user stays constant.
      * 
      * @throws IOException if problem reading raster
+     * @throws IntersectionException if we unexpectedly did not intersect the DTM
      */
     @Test
-    public void testShorterLookingDown() throws IOException {
+    public void testShorterLookingDown() throws IOException, IntersectionException {
     	Raster nrwHeightMap = new Raster(fileFromResource(RASTER2_RESOURCE));
     	
     	easting = 265114.674984; 					
@@ -248,11 +254,10 @@ public class LineOfSightTest extends TestCase {
         
         try {
         	double[] result = LineOfSight.Calculate(nrwHeightMap, easting, northing, bearing, tilt, myHeight);
-        	assertNull(result);
         	fail("intersected heightmap when looking up");
-        } catch (ArrayIndexOutOfBoundsException e) {
+        } catch (ReachedSurfaceBoundsException e) {
         	assertEquals(e.getMessage(), "Surface X out of bounds: 1000");
-        }
+        } catch (NoIntersectionException e) {}
     }
     
     /**
@@ -270,16 +275,17 @@ public class LineOfSightTest extends TestCase {
     	
     	double[] result = null;
     	
+    	try {
+    		result = LineOfSight.Calculate(heightMap, 265114.674984, 289276.72543, 0, -20, 1.5);
+    	} catch (NoIntersectionException e) {
+    		// handle that we were not pointing at the ground (within 1k)
+    	} catch (ReachedSurfaceBoundsException e) {
+    		// handle that we tried to look outside the bounds of surface raster extent
+    	}
     	
-    	result = LineOfSight.Calculate(heightMap, 265114.674984, 289276.72543, 90, 20, 1.5);
+    	// use result
+    	System.out.println(LineOfSight.resultAsString(result));
     	
-    	
-    	if(result != null) {
-			// use it
-		} else {
-			// result is null
-			// not pointing at ground (within 1k)
-		}
     }
     
        

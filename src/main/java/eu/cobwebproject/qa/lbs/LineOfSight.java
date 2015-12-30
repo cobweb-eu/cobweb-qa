@@ -41,8 +41,8 @@ package eu.cobwebproject.qa.lbs;
  */
 
 public class LineOfSight {
-	private static final double STEP_SIZE = 0.1; // step size for LOS approximation algorithm
-	private static final double DRAW_DISTANCE = 1000; // arbitrary limit in vision distance to limit iterations - 0.5km
+	public static final double VIEW_DISTANCE = 1000; // arbitrary limit in vision distance to limit iterations - 0.5km
+	public static final double STEP_SIZE = 0.1; // step size for LOS approximation algorithm
 	
 	private Raster heightMap;
 	private double userHeight;
@@ -85,15 +85,17 @@ public class LineOfSight {
 	 * 
 	 * @return null if there is no intersection within DRAW_DISTANCE, otherwise the result of LOS calculation 
 	 * (horizontal distance to target, world height of user, x of target, y of target, height of target)
-	 * @throws ArrayIndexOutOfBoundsException if we tried to look outside the heightmap coverage
+	 * If we did not intersect the heightmap within view distance or we went out of bounds
+	 * @throws ReachedSurfaceBoundsException If we try to look out of the extent of the raster
+	 * @throws NoIntersectionException If we do not intersect the heightmap surface within VIEW_DISTANCE
 	 */
-	public double[] calculateLOS() throws ArrayIndexOutOfBoundsException {
+	public double[] calculateLOS() throws ReachedSurfaceBoundsException, NoIntersectionException {
 		if(currentResult != null) 
 			return currentResult;					// return a cached result if there is one
 		
 		double distance = userHeight; 				// start the distance down the line at userHeight
 		double delta = stepSize; 					// step size for the algorithm
-		double scanLimit = DRAW_DISTANCE; 			// draw distance
+		double scanLimit = VIEW_DISTANCE; 			// draw distance
 		double theta = getBearingAsRadians();		// convert heading to height map radians
 		
 		double eyeHeight = userHeight + getSurfaceHeightForPoint(currentNorthing, currentEasting);
@@ -114,7 +116,8 @@ public class LineOfSight {
 			distance += delta;						// step the distance
 		}
 		
-		return null;								// we hit nothing
+		throw new NoIntersectionException("Did not intersect surface within view distance " + VIEW_DISTANCE + "m");
+		
 	}
 
 	////////////////////////////
@@ -154,9 +157,15 @@ public class LineOfSight {
 	 * @param northing world northing coord
 	 * @param easting world easting coord
 	 * @return height from the cell for this coord
+	 * @throws ReachedSurfaceBoundsException If the world point is beyond the bounds of the raster extent
 	 */
-	private double getSurfaceHeightForPoint(double northing, double easting) {
-		return heightMap.getXY(getXCell(easting),getYCell(northing));
+	private double getSurfaceHeightForPoint(double northing, double easting) throws ReachedSurfaceBoundsException {
+		try {
+			return heightMap.getXY(getXCell(easting),getYCell(northing));
+		} catch (ArrayIndexOutOfBoundsException e) {
+			// Tried to look outside height map extent
+			throw new ReachedSurfaceBoundsException(e.getMessage());
+		}
 	}
 	
 	/**
@@ -192,8 +201,10 @@ public class LineOfSight {
 	 * @param tilt Tilt of the phone in degrees, 0 is horizontal
 	 * @param userHeight Height of the phone/eye
 	 * @return the result of LOS calculation (horizontal distance to target, height of user, x of target, y of target, height of target) or null if no intersection
+	 * @throws NoIntersectionException If not pointing at surface within LineOfSight.VIEW_DISTANCE
+	 * @throws ReachedSurfaceBoundsException If tried to look beyond the bounds of the raster extent 
 	 */
-	public static double[] Calculate(Raster heightMap, double easting, double northing, double bearing, double tilt, double userHeight) {
+	public static double[] Calculate(Raster heightMap, double easting, double northing, double bearing, double tilt, double userHeight) throws ReachedSurfaceBoundsException, NoIntersectionException {
 		LineOfSight los = new LineOfSight(heightMap, easting, northing, bearing, tilt, userHeight);
 		return los.calculateLOS();
 	}
@@ -202,7 +213,7 @@ public class LineOfSight {
 	 * Gets the result array as a nice string
 	 *
 	 * @param result The result double array from LOS calculation
-	 * @return The result summarised as a string
+	 * @return The result summarised as a string\
 	 */
 	public static String resultAsString(double[] result) {
 		assert result.length == 5;

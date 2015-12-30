@@ -7,6 +7,8 @@ package eu.cobwebproject.qa.lbs;
  * @author Environment Systems - sebastian.clarke@envsys.co.uk
  *
  */
-public class HitSurfaceExtentException extends IntersectionException {
-
+public class ReachedSurfaceBoundsException extends IntersectionException {
+	public ReachedSurfaceBoundsException(String message) {
+		super(message);
+	}
 }
