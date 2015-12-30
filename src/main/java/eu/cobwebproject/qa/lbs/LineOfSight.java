@@ -83,7 +83,8 @@ public class LineOfSight {
 	 * 
 	 * Will return a cached result if no attributes have changed since last run
 	 * 
-	 * @return the result of LOS calculation (horizontal distance to target, height of user, x of target, y of target, height of target) or null if no intersection
+	 * @return null if there is no intersection within DRAW_DISTANCE, otherwise the result of LOS calculation 
+	 * (horizontal distance to target, world height of user, x of target, y of target, height of target)
 	 * @throws ArrayIndexOutOfBoundsException if we tried to look outside the heightmap coverage
 	 */
 	public double[] calculateLOS() throws ArrayIndexOutOfBoundsException {

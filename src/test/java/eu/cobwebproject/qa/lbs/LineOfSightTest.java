@@ -22,6 +22,7 @@ public class LineOfSightTest extends TestCase {
 	private static final String FLAT_RESOURCE = "surfaceModel_flat_1m.asc";	// sample flat dataset
 	
 	private double easting, northing, bearing, tilt, myHeight;				// test conditions
+	private LineOfSight los;
 	
 	/**
 	 * Tests the new Line Of Sight implementation using a flat surface
@@ -82,7 +83,7 @@ public class LineOfSightTest extends TestCase {
         
         // load raster and setup LineOfSight instance
         Raster raster = new Raster(fileFromResource(RASTER2_RESOURCE));
-        LineOfSight los = new LineOfSight(raster, easting, northing, bearing, tilt, myHeight);
+        los = new LineOfSight(raster, easting, northing, bearing, tilt, myHeight);
         
         expectedEyeHeight = myHeight + 72.42;  			// known for our position
         expectedIntersectHeight = 74.65;				// correct for this orientation
@@ -190,7 +191,7 @@ public class LineOfSightTest extends TestCase {
         tilt = -20;
         myHeight = 2;
         
-        LineOfSight los = new LineOfSight(raster1, easting, northing, bearing, tilt, myHeight);
+        los = new LineOfSight(raster1, easting, northing, bearing, tilt, myHeight);
         printStartingConditions("Testing Both surface models - standing in field facing north");
         double[] result1 = los.calculateLOS();
         los.setHeightMap(raster2);
@@ -221,7 +222,7 @@ public class LineOfSightTest extends TestCase {
         
         double lastDistance = 1000000;
         double prevHeight = 0;
-        LineOfSight los = new LineOfSight(nrwHeightMap, easting, northing, bearing, tilt, myHeight);
+        los = new LineOfSight(nrwHeightMap, easting, northing, bearing, tilt, myHeight);
         
         for(int i = 0; i < 8; i++) {
         	tilt = (i*-10)-1;
@@ -233,6 +234,52 @@ public class LineOfSightTest extends TestCase {
             lastDistance = result[0];
             prevHeight = result[1];
         }
+    }
+    
+    public void testLookingUp() throws IOException {
+    	Raster nrwHeightMap = new Raster(fileFromResource(RASTER2_RESOURCE));
+    	
+    	// Test conditions (starting in a flat-ish field)
+    	easting = 265114.674984; 					
+        northing = 289276.72543;
+        bearing = 90;
+        tilt = 20; 		// Looking up
+        myHeight = 1.5;
+        
+        try {
+        	double[] result = LineOfSight.Calculate(nrwHeightMap, easting, northing, bearing, tilt, myHeight);
+        	assertNull(result);
+        	fail("intersected heightmap when looking up");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        	assertEquals(e.getMessage(), "Surface X out of bounds: 1000");
+        }
+    }
+    
+    /**
+     * This test shows example usages for the LineOfSight Class
+     */
+    public void testShowUsage() {
+    	Raster heightMap = null;
+    	
+    	try {
+    		heightMap = new Raster(fileFromResource(RASTER2_RESOURCE));
+    	} catch (IOException e) {
+    		// handle failure reading file
+    		fail("Couldn't read file");
+    	}
+    	
+    	double[] result = null;
+    	
+    	
+    	result = LineOfSight.Calculate(heightMap, 265114.674984, 289276.72543, 90, 20, 1.5);
+    	
+    	
+    	if(result != null) {
+			// use it
+		} else {
+			// result is null
+			// not pointing at ground (within 1k)
+		}
     }
     
        

@@ -10,10 +10,6 @@ public class Parameters {
 	private double noData;
 	
 	
-	public Parameters(){
-		
-	}
-	
 	/**
 	 * @param cellSize size of the cells
 	 * @param nCols the number of columns
@@ -22,7 +18,7 @@ public class Parameters {
 	 * @param ylCorner the bottom corner of the Y of the array
 	 * @param noData the no data value
 	 */
-	public Parameters(double cellSize, int nCols, int nRows, double xlCorner, double ylCorner, double noData){
+	public Parameters(double cellSize, int nCols, int nRows, double xlCorner, double ylCorner, double noData) {
 		
 		this.cellSize = cellSize;
 		this.nCols = nCols;
