@@ -8,6 +8,8 @@ package eu.cobwebproject.qa.lbs;
  *
  */
 public class ReachedSurfaceBoundsException extends IntersectionException {
+	private static final long serialVersionUID = 5800628958099184389L;
+
 	public ReachedSurfaceBoundsException(String message) {
 		super(message);
 	}

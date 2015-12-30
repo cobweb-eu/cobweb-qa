@@ -8,6 +8,9 @@ package eu.cobwebproject.qa.lbs;
  *
  */
 public class NoIntersectionException extends IntersectionException {
+
+	private static final long serialVersionUID = -8635561106931621770L;
+
 	public NoIntersectionException(String message) {
 		super(message);
 	}
