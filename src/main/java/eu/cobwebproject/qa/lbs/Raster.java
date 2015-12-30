@@ -3,6 +3,8 @@ package eu.cobwebproject.qa.lbs;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 
 /**
  * Encapsulates the data about a raster with utility functions to read
@@ -39,6 +41,30 @@ public class Raster {
 		this.fileName = file;	
 		// read and parse header from filename to parameters
 		BufferedReader br = new BufferedReader(new FileReader(fileName));
+		try {
+			double[] headerData = Raster.consumeRasterHeader(br);	
+			this.params = new Parameters(headerData[4], 
+										 (int) headerData[0], 
+										 (int) headerData[1], 
+										 headerData[2], 
+										 headerData[3], 
+										 headerData[5]);
+			this.surfaceModel = Raster.consumeAsciiData(br, params.getnCols(), params.getnRows());
+		} finally {
+			br.close();
+		}
+	}
+	
+	/**
+	 * Constructor returns a Raster parsed from the file given by url
+	 * 
+	 * @param url Url to the ascii heightmap data
+	 * @throws IOException 
+	 * 
+	 */
+	public Raster(URL url) throws IOException {
+		this.fileName = url.toString();
+		BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
 		try {
 			double[] headerData = Raster.consumeRasterHeader(br);	
 			this.params = new Parameters(headerData[4], 
