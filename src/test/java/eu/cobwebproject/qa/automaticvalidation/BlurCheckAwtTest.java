@@ -16,7 +16,7 @@ import junit.framework.TestCase;
         bool debug (True) : generate intermediate (greyscale/edge detect) images
 */
 
-public class BlurCheckAwtTest extends TestCase{
+public class BlurCheckAwtTest extends TestCase {
     private final int threshold = 1500;
     private final boolean debug = true;
 

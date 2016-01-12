@@ -185,4 +185,24 @@ public class Raster {
 			return fileName;
 		return "Manually parsed raster";
 	}
+	
+	/**
+	 * Public helper method to check if a set of world coordinates is within
+	 * the coverage area of a raster
+	 * 
+	 * @param easting World easting coordinates
+	 * @param northing World northing coordinates
+	 * @return true if the the point is within raster coverage area, else false
+	 */
+	public boolean isPointInBounds(double easting, double northing) {
+		if(easting > params.getxlCorner() + (params.getcellSize() * params.getnCols())) 
+			return false;
+		if(easting < params.getxlCorner())
+			return false;
+		if(northing > params.getylCorner() + (params.getcellSize() * params.getnRows()))
+			return false;
+		if(northing < params.getylCorner())
+			return false;
+		return true;
+	}
 }

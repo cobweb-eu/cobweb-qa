@@ -20,6 +20,7 @@ public class LineOfSightTest extends TestCase {
 	private static final String RASTER1_RESOURCE = "surfaceModel.txt"; 		// this is the original surface model Sam provided
 	private static final String RASTER2_RESOURCE = "surfaceModelNRW.asc";	// this is the NRW 1M dataset of the same area
 	private static final String FLAT_RESOURCE = "surfaceModel_flat_1m.asc";	// sample flat dataset
+	private static final String OBSERVATION_AREA_RESOURCE = "surfaceModel_sn7698.txt";
 	
 	private double easting, northing, bearing, tilt, myHeight;				// test conditions
 	private LineOfSight los;
@@ -44,13 +45,13 @@ public class LineOfSightTest extends TestCase {
 		easting = 265547.050156; 
 		northing = 289498.392446;
 		bearing = 45;
-		tilt = -20;
+		tilt = 20;
 		myHeight = 2;
 		
 		printStartingConditions("Testing new LOS Implementation with flat surface model");
 		
 		// Calculate expected results
-		final double horizontalDisplacement = myHeight * Math.tan(Math.toRadians(90+tilt));
+		final double horizontalDisplacement = myHeight * Math.tan(Math.toRadians(90-tilt));
 		final double expectedXPosition = easting + Math.sin(Math.toRadians(bearing)) * horizontalDisplacement;
 		final double expectedYPosition = northing + Math.cos(Math.toRadians(bearing)) * horizontalDisplacement;
 		// Perform line of sight estimation - use static method for throw-away call
@@ -80,7 +81,7 @@ public class LineOfSightTest extends TestCase {
 		easting = 265114.674984;	// standing in a field 
         northing = 289276.72543;	// standing in a field
         bearing = 0;				// facing north
-        tilt = -0;					// angled at horizon
+        tilt = 0;					// angled at horizon
         myHeight = 2;				// 2m tall
         
         // load raster and setup LineOfSight instance
@@ -142,7 +143,6 @@ public class LineOfSightTest extends TestCase {
         	result = los.calculateLOS();
         	fail("Expected to not intersect in bounds of height map");
         } catch (IntersectionException e) {
-        	// assert
         	assertEquals(e.getMessage(), "Surface X out of bounds: -1");
         }
      
@@ -193,7 +193,7 @@ public class LineOfSightTest extends TestCase {
     	easting = 265114.674984; 
         northing = 289276.72543;
         bearing = 0;	// facing north
-        tilt = -20;
+        tilt = 20;
         myHeight = 2;
         
         los = new LineOfSight(raster1, easting, northing, bearing, tilt, myHeight);
@@ -223,7 +223,7 @@ public class LineOfSightTest extends TestCase {
     	easting = 265114.674984; 					
         northing = 289276.72543;
         bearing = 0;
-        tilt = -1;
+        tilt = 1;
         myHeight = 1.5;
         
         double lastDistance = 1000000;
@@ -231,7 +231,7 @@ public class LineOfSightTest extends TestCase {
         los = new LineOfSight(nrwHeightMap, easting, northing, bearing, tilt, myHeight);
         
         for(int i = 0; i < 8; i++) {
-        	tilt = (i*-10)-1;
+        	tilt = (i*10)+1;
         	los.setTilt(tilt);
         	double[] result = los.calculateLOS();
             assertTrue(result[0] <= lastDistance);
@@ -242,14 +242,14 @@ public class LineOfSightTest extends TestCase {
         }
     }
     
-    public void testLookingUp() throws IOException {
+    public void testLookingUp() throws IOException, NoIntersectionException, StartPositionOutOfBoundsException {
     	Raster nrwHeightMap = new Raster(fileFromResource(RASTER2_RESOURCE));
     	
     	// Test conditions (starting in a flat-ish field)
     	easting = 265114.674984; 					
         northing = 289276.72543;
         bearing = 90;
-        tilt = 20; 		// Looking up
+        tilt = -20; 		// Looking up
         myHeight = 1.5;
         
         try {
@@ -257,7 +257,26 @@ public class LineOfSightTest extends TestCase {
         	fail("intersected heightmap when looking up");
         } catch (ReachedSurfaceBoundsException e) {
         	assertEquals(e.getMessage(), "Surface X out of bounds: 1000");
-        } catch (NoIntersectionException e) {}
+        }
+    }
+    
+    
+    /**
+     * Test using values directly copied from a real observation (uses custom heightmap location)
+     * @throws IOException
+     * @throws IntersectionException
+     */
+    public void testWPSObservations() throws IOException, IntersectionException {
+    	Raster observationRaster = new Raster(fileFromResource(OBSERVATION_AREA_RESOURCE));
+    	
+    	easting = 276283.4833342557; 					
+        northing = 298379.6816316855;
+        bearing = 182.5;
+        tilt = 82.0; 
+        myHeight = 1.5;
+        
+    	double[] result = LineOfSight.Calculate(observationRaster, easting, northing, bearing, tilt, myHeight);
+    	checkResult(result, 134.43, 133.03, 276283.41790517466, 298378.18305935315, 1.5);
     }
     
     /**
@@ -276,12 +295,14 @@ public class LineOfSightTest extends TestCase {
     	double[] result = null;
     	
     	try {
-    		result = LineOfSight.Calculate(heightMap, 265114.674984, 289276.72543, 0, -20, 1.5);
+    		result = LineOfSight.Calculate(heightMap, 265114.674984, 289276.72543, 0, 20, 1.5);
     	} catch (NoIntersectionException e) {
     		// handle that we were not pointing at the ground (within 1k)
     	} catch (ReachedSurfaceBoundsException e) {
     		// handle that we tried to look outside the bounds of surface raster extent
-    	}
+    	} catch (StartPositionOutOfBoundsException e) {
+			// handle that the starting point is not within the bounds of the raster extent
+		}
     	
     	// use result
     	System.out.println(LineOfSight.resultAsString(result));

@@ -60,7 +60,7 @@ public class LineOfSight {
 	 * @param easting World easting of eye position
 	 * @param northing World northing of eye position
 	 * @param bearing Bearing in degrees from device (heading)
-	 * @param tilt Tilt of the eye in degrees, 0 is horizontal
+	 * @param tilt Tilt of the eye in degrees, 0 is horizontal, 90 is pointing at ground 
 	 * @param userHeight Height of the phone/eye
 	 */
 	public LineOfSight(Raster heightMap, double easting, double northing, double bearing, double tilt, double userHeight) {
@@ -88,20 +88,25 @@ public class LineOfSight {
 	 * If we did not intersect the heightmap within view distance or we went out of bounds
 	 * @throws ReachedSurfaceBoundsException If we try to look out of the extent of the raster
 	 * @throws NoIntersectionException If we do not intersect the heightmap surface within VIEW_DISTANCE
+	 * @throws StartPositionOutOfBoundsException 
 	 */
-	public double[] calculateLOS() throws ReachedSurfaceBoundsException, NoIntersectionException {
+	public double[] calculateLOS() throws ReachedSurfaceBoundsException, NoIntersectionException, StartPositionOutOfBoundsException {
 		if(currentResult != null) 
-			return currentResult;					// return a cached result if there is one
+			return currentResult;						// return a cached result if there is one
+		
+		if(!isCurrentPositionInBounds()) {				// check that we are in the heightmap coverage area
+			throw new StartPositionOutOfBoundsException("Position " + currentEasting + "," + currentNorthing + " is out of bounds of the heightmap");
+		}
 		
 		double distance = userHeight; 				// start the distance down the line at userHeight
-		double delta = stepSize; 					// step size for the algorithm
+		double delta = stepSize; 						// step size for the algorithm
 		double scanLimit = VIEW_DISTANCE; 			// draw distance
-		double theta = getBearingAsRadians();		// convert heading to height map radians
+		double theta = getBearingAsRadians();			// convert heading to height map radians
 		
 		double eyeHeight = userHeight + getSurfaceHeightForPoint(currentNorthing, currentEasting);
 		
-		while (distance < scanLimit) {				// scan down in step size until scan limit
-			double x = Math.cos(theta) * distance;	// x displacement
+		while (distance < scanLimit) {					// scan down in step size until scan limit
+			double x = Math.cos(theta) * distance;		// x displacement
 			double y = Math.sin(theta) * distance; 	// y displacement
 			
 			// use the tilt to calculate ray height at this distance
@@ -109,11 +114,11 @@ public class LineOfSight {
 			// get the height from the surface map at this displacement
 			double surfaceHeight = getSurfaceHeightForPoint(currentNorthing + y, currentEasting + x);
 			
-			if(visionHeight <= surfaceHeight) {		// intersection test
+			if(visionHeight <= surfaceHeight) {			// intersection test
 				currentResult = new double[]{distance, eyeHeight, currentEasting + x, currentNorthing + y, surfaceHeight}; 
 				return currentResult;
 			}
-			distance += delta;						// step the distance
+			distance += delta;							// step the distance
 		}
 		
 		throw new NoIntersectionException("Did not intersect surface within view distance " + VIEW_DISTANCE + "m");
@@ -184,7 +189,11 @@ public class LineOfSight {
 	 * @return the vertical height of the line of sight ray
 	 */
 	private double getRayHeight(double distance, double eyeHeight) {
-		return (distance * Math.tan(Math.toRadians(tilt))) + eyeHeight;
+		return (distance * Math.tan(Math.toRadians(-tilt))) + eyeHeight;
+	}
+	
+	private boolean isCurrentPositionInBounds() {
+		return heightMap.isPointInBounds(currentEasting, currentNorthing);
 	}
  
 	//////////////////////////////////
@@ -202,9 +211,10 @@ public class LineOfSight {
 	 * @param userHeight Height of the phone/eye
 	 * @return the result of LOS calculation (horizontal distance to target, height of user, x of target, y of target, height of target) or null if no intersection
 	 * @throws NoIntersectionException If not pointing at surface within LineOfSight.VIEW_DISTANCE
-	 * @throws ReachedSurfaceBoundsException If tried to look beyond the bounds of the raster extent 
+	 * @throws ReachedSurfaceBoundsException If tried to look beyond the bounds of the raster extent
+	 * @throws StartPositionOutOfBoundsException If starting position not covered by raster  
 	 */
-	public static double[] Calculate(Raster heightMap, double easting, double northing, double bearing, double tilt, double userHeight) throws ReachedSurfaceBoundsException, NoIntersectionException {
+	public static double[] Calculate(Raster heightMap, double easting, double northing, double bearing, double tilt, double userHeight) throws ReachedSurfaceBoundsException, NoIntersectionException, StartPositionOutOfBoundsException {
 		LineOfSight los = new LineOfSight(heightMap, easting, northing, bearing, tilt, userHeight);
 		return los.calculateLOS();
 	}
@@ -243,6 +253,10 @@ public class LineOfSight {
 		this.currentResult = null;
 	}
 	
+	/**
+	 * Set Tilt
+	 * @param tilt Tilt of the eye in degrees, 0 is horizontal, 90 is pointing at ground
+	 */
 	public void setTilt(double tilt) {
 		this.tilt = tilt;
 		this.currentResult = null;
