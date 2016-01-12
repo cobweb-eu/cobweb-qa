@@ -3,17 +3,19 @@ package eu.cobwebproject.qa.lbs;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 
 /**
  * Encapsulates the data about a raster with utility functions to read
- * the raster from an ESRI ASCII grid
+ * the raster from an Arc ASCII grid
  * 
  * @author Sebastian Clarke - Environment Systems - sebastian.clarke@envsys.co.uk
  *
  */
 public class Raster {
 	private final Parameters params;			// The parameters of the data (e.g., rows, cols) 
-	private final double[][] surfaceModel;	// The actual surface model data
+	private final double[][] surfaceModel;		// The actual surface model data
 	private final String fileName;				// the fileName if we did the parseing
 
 	/**
@@ -41,13 +43,37 @@ public class Raster {
 		BufferedReader br = new BufferedReader(new FileReader(fileName));
 		try {
 			double[] headerData = Raster.consumeRasterHeader(br);	
-			this.params = new Parameters((int) headerData[4], 
+			this.params = new Parameters(headerData[4], 
 										 (int) headerData[0], 
 										 (int) headerData[1], 
 										 headerData[2], 
 										 headerData[3], 
 										 headerData[5]);
-			this.surfaceModel = Raster.consumeAsciiData(br, params.nCols, params.nRows);
+			this.surfaceModel = Raster.consumeAsciiData(br, params.getnCols(), params.getnRows());
+		} finally {
+			br.close();
+		}
+	}
+	
+	/**
+	 * Constructor returns a Raster parsed from the file given by url
+	 * 
+	 * @param url Url to the ascii heightmap data
+	 * @throws IOException 
+	 * 
+	 */
+	public Raster(URL url) throws IOException {
+		this.fileName = url.toString();
+		BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+		try {
+			double[] headerData = Raster.consumeRasterHeader(br);	
+			this.params = new Parameters(headerData[4], 
+										 (int) headerData[0], 
+										 (int) headerData[1], 
+										 headerData[2], 
+										 headerData[3], 
+										 headerData[5]);
+			this.surfaceModel = Raster.consumeAsciiData(br, params.getnCols(), params.getnRows());
 		} finally {
 			br.close();
 		}
@@ -67,6 +93,23 @@ public class Raster {
 	 */
 	public double[][] getSurfaceModel() {
 		return surfaceModel;
+	}
+	
+	/**
+	 * Gets the value from the surface model for given x,y cell index coords
+	 * 
+	 * @param x cell coordinate in rows
+	 * @param y cell coordinate in cols
+	 * 
+	 * @return the value from the surface model raster 
+	 */
+	public double getXY(int x, int y) {
+		if (y >= params.getnCols() || y < 0)
+			throw new ArrayIndexOutOfBoundsException("Surface Y out of bounds: " + y);
+		if (x >= params.getnRows() || x < 0)
+			throw new ArrayIndexOutOfBoundsException("Surface X out of bounds: " + x);
+		
+		return surfaceModel[y][x];
 	}
 	
 	/**
@@ -128,7 +171,7 @@ public class Raster {
 		double[][] ASCIIData = new double[cols][rows];
 		
 		for(int i = 0;i < cols;i++) {
-			String[] temp = br.readLine().split("[ ]+");
+			String[] temp = br.readLine().trim().split("[ ]+");
 			for(int j = 0;j < rows;j++) {
 				ASCIIData[i][j] = Double.parseDouble(temp[j]);				
 		 	}
@@ -141,5 +184,25 @@ public class Raster {
 		if(fileName != null)
 			return fileName;
 		return "Manually parsed raster";
+	}
+	
+	/**
+	 * Public helper method to check if a set of world coordinates is within
+	 * the coverage area of a raster
+	 * 
+	 * @param easting World easting coordinates
+	 * @param northing World northing coordinates
+	 * @return true if the the point is within raster coverage area, else false
+	 */
+	public boolean isPointInBounds(double easting, double northing) {
+		if(easting > params.getxlCorner() + (params.getcellSize() * params.getnCols())) 
+			return false;
+		if(easting < params.getxlCorner())
+			return false;
+		if(northing > params.getylCorner() + (params.getcellSize() * params.getnRows()))
+			return false;
+		if(northing < params.getylCorner())
+			return false;
+		return true;
 	}
 }

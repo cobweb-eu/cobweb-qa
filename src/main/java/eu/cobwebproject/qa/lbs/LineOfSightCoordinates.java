@@ -1,12 +1,14 @@
 package eu.cobwebproject.qa.lbs;
 
 /**
+ * Original line of sight implementation
  * 
  * @author Sam Meek
  * 
- *
+ * @deprecated use {@link eu.cobwebproject.qa.lbs.LineOfSight} instead
  */
 
+@Deprecated
 public class LineOfSightCoordinates {
 	
 	private double[] myCoords = new double [2];
@@ -25,8 +27,10 @@ public class LineOfSightCoordinates {
 	 * @param bearing the bearing in degrees from North
 	 * @param tilt the tilt of the device where 0 is perpendicular to the ground
 	 * @param userHeight the height as a user added as a constant to the height extracted from the surface model
+	 * 
+	 * @deprecated use {@link eu.cobwebproject.qa.lbs.LineOfSight#LineOfSight(Raster, double, double, double, double, double)}
 	 */
-	
+	@Deprecated
 	public LineOfSightCoordinates(double[] myCoords, double[][] surfaceModel, Parameters parameters,
 			double bearing, double tilt, double userHeight ){
 		
@@ -64,7 +68,7 @@ public class LineOfSightCoordinates {
 				}
 			
 			dhTuple myResult = heightICanSee(makeAngle(theta), Math.toRadians(elevation), surfaceModel, 
-					parameters.cellSize, (int)getMyx(coords[0],parameters), (int)getMyy(coords[1],parameters), myHeight);
+					parameters.getcellSize(), (int)getMyx(coords[0],parameters), (int)getMyy(coords[1],parameters), myHeight);
 			
 			double []myData = new double[3];
 			
