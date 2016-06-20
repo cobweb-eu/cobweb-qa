@@ -1,6 +1,8 @@
 package eu.cobwebproject.qa.lbs;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.junit.Test;
 
@@ -321,10 +323,15 @@ public class LineOfSightTest extends TestCase {
     }
     
     private String fileFromResource(String resourceName) {
-    	String fileName = this.getClass().getResource(resourceName).getFile().toString();
-    	if(DEBUG) 
-    		System.out.println("Looking for resource: " + fileName);
-		return fileName;
+    	String fileName = this.getClass().getResource(resourceName).getFile();
+		try {
+			URI uri = new URI(fileName);
+			return uri.getPath();
+		} catch (URISyntaxException e) {
+			System.out.println("Could not parse file name: " + fileName);
+			e.printStackTrace();
+			return fileName;
+		}
 	}
     
     private static void checkResult(double[] result, double eyeHeight, double intersectHeight, double xCoord, double yCoord, double distance) {
