@@ -14,7 +14,7 @@ import junit.framework.TestCase;
  */
 public class LineOfSightTest extends TestCase {
 	
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 	
 	private static final double ACCURACY = 0.2;
 	private static final String RASTER1_RESOURCE = "surfaceModel.txt"; 		// this is the original surface model Sam provided
@@ -321,7 +321,10 @@ public class LineOfSightTest extends TestCase {
     }
     
     private String fileFromResource(String resourceName) {
-    	return this.getClass().getResource(resourceName).getFile().toString();
+    	String fileName = this.getClass().getResource(resourceName).getFile().toString();
+    	if(DEBUG) 
+    		System.out.println("Looking for resource: " + fileName);
+		return fileName;
 	}
     
     private static void checkResult(double[] result, double eyeHeight, double intersectHeight, double xCoord, double yCoord, double distance) {
