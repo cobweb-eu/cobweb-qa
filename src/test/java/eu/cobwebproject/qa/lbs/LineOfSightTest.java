@@ -1,6 +1,8 @@
 package eu.cobwebproject.qa.lbs;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.junit.Test;
 
@@ -14,7 +16,7 @@ import junit.framework.TestCase;
  */
 public class LineOfSightTest extends TestCase {
 	
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 	
 	private static final double ACCURACY = 0.2;
 	private static final String RASTER1_RESOURCE = "surfaceModel.txt"; 		// this is the original surface model Sam provided
@@ -321,7 +323,15 @@ public class LineOfSightTest extends TestCase {
     }
     
     private String fileFromResource(String resourceName) {
-    	return this.getClass().getResource(resourceName).getFile().toString();
+    	String fileName = this.getClass().getResource(resourceName).getFile();
+		try {
+			URI uri = new URI(fileName);
+			return uri.getPath();
+		} catch (URISyntaxException e) {
+			System.out.println("Could not parse file name: " + fileName);
+			e.printStackTrace();
+			return fileName;
+		}
 	}
     
     private static void checkResult(double[] result, double eyeHeight, double intersectHeight, double xCoord, double yCoord, double distance) {
