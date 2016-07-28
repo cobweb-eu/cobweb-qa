@@ -28,7 +28,7 @@ import javax.imageio.ImageIO;
 * 
 * @author EDINA
 */
-public class BlurCheckAwt extends BlurCheckRunnable{
+public class BlurCheckAwt extends BlurCheckRunnable {
         /*********/
         private BufferedImage original;
         
@@ -106,7 +106,7 @@ public class BlurCheckAwt extends BlurCheckRunnable{
         }
 
         private boolean getPassDecision( BufferedImage img ){
-            long variance = getVariance(img);
+            this.variance = getVariance(img);
             dbg("Variance is : " + variance);
             return variance > threshold;
         }

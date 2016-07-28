@@ -24,8 +24,10 @@ public abstract class BlurCheckRunnable implements Runnable {
         /* the actual Kernel. Any 3x3 kernel should work here for experimentation e.g. {-1,-1,-1,-1,8,-1,-1,-1,-1}  */
         public static final float LAPLACE_KERNEL[]={0,-1,0,-1,4,-1,0,-1,0};
         /* Check this after the test is run for the result. This is null if process has not yet been "run()" */
-        public Boolean pass;
-
+        public Boolean pass; //Whether the image passed blur check threshold
+        public long variance; //Laplace variance value of the image
+        
+        
         /*********/
 
         protected File file;
