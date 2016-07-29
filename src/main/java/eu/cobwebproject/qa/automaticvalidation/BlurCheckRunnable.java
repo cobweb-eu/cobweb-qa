@@ -44,6 +44,7 @@ public abstract class BlurCheckRunnable implements Runnable {
         /** Theshold is the desired variance i.e. the higher the sharper ( 1500 is a good start) */ 
         public BlurCheckRunnable(File imageFile, int threshold, boolean debug){
             this.pass = null;
+            this.variance = 0;
             this.file = imageFile;
             this.threshold = threshold;
             this.debug = debug;
@@ -51,6 +52,7 @@ public abstract class BlurCheckRunnable implements Runnable {
 
 		public BlurCheckRunnable(int threshold, boolean debug) {
 			this.pass = null;
+			this.variance = 0;
 			this.file = null;
 			this.threshold = threshold;
             this.debug = debug;

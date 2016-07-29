@@ -47,6 +47,7 @@ public class BlurCheckAwtTest extends TestCase {
             
             BlurCheckAwt lap = new BlurCheckAwt(testImage, threshold, debug);
             lap.run();
+            System.out.println("hello: " + lap.variance);
             assertFalse(lap.pass);
         }
         catch(URISyntaxException ex){
@@ -62,6 +63,7 @@ public class BlurCheckAwtTest extends TestCase {
             File testImage = new File(url.toURI());
             BlurCheckAwt lap = new BlurCheckAwt(testImage, threshold, debug);
             lap.run();
+            System.out.println("hello: " + lap.variance);
             assertTrue(lap.pass);
         }
         catch(URISyntaxException ex){
