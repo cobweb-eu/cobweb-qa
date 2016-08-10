@@ -313,8 +313,7 @@ public class LineOfSightTest extends TestCase {
     	System.out.println(LineOfSight.resultAsString(result));
     	
     }
-    
-    
+        
 
     public void testSmall() throws IOException, NoIntersectionException, StartPositionOutOfBoundsException, ReachedSurfaceBoundsException {
     	Raster nrwHeightMap = new Raster(fileFromResource( SMALL_RESOURCE));
@@ -335,7 +334,37 @@ public class LineOfSightTest extends TestCase {
     }
     
     
-
+    public void testInFieldWithNRWDTMRectangle() throws IOException, IntersectionException{
+        double expectedIntersectHeight, expectedX, expectedY, expectedDistance, expectedEyeHeight;
+        double[] result;
+        
+		// Set up initial test conditions
+		easting = 265114.674984;	// standing in a field 
+	    northing = 289276.72543;	// standing in a field
+	    bearing = 0;				// facing north
+	    tilt = 0;					// angled at horizon
+	    myHeight = 2;				// 2m tall
+	    
+	    // load raster and setup LineOfSight instance
+	    Raster raster = new Raster(fileFromResource(RASTER3_RESOURCE));
+	    los = new LineOfSight(raster, easting, northing, bearing, tilt, myHeight);
+	    
+	    expectedEyeHeight = myHeight + 72.42;  			// known for our position
+	    expectedIntersectHeight = 74.65;				// correct for this orientation
+	    expectedX = easting;
+	    expectedY = 289286.02543;						// checked in qgis
+	    expectedDistance = 9.3;   
+	    printStartingConditions("Testing NRW DSM - standing in field facing north");
+	    result = los.calculateLOS();
+        
+	    System.out.println("distance: " + result[0]);
+        System.out.println("result1 " + result[1]);
+        System.out.println("result2&3 " + result[2] + ", " +result[3]);
+        
+	    dbg(LineOfSight.resultAsString(result));
+	    checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);        
+    }
+    
     
     
     private void printStartingConditions(String testName) {
