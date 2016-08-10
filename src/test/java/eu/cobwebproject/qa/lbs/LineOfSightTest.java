@@ -23,9 +23,9 @@ public class LineOfSightTest extends TestCase {
 	private static final String RASTER2_RESOURCE = "surfaceModelNRW.asc";	// this is the NRW 1M dataset of the same area
 	private static final String FLAT_RESOURCE = "surfaceModel_flat_1m.asc";	// sample flat dataset
 	private static final String OBSERVATION_AREA_RESOURCE = "surfaceModel_sn7698.txt";
-	private static final String SMALL_RESOURCE = "surfaceModel_tiny_rectangle.asc";
-	private static final String RASTER3_RESOURCE= "surfaceModelNRW_rectangle.asc";
-	private static final String RASTER4_RESOURCE= "surfaceModelNRW_rectangle_gdalclip.asc";
+	private static final String SMALL_RESOURCE = "surfaceModel_tiny.asc"; //Small 10x10 file for debugging
+	private static final String RASTER3_RESOURCE= "surfaceModelNRW_rectangle_wide.asc"; //wide (100 cols, 900 rows) modification to NRW sample tile 
+	private static final String RASTER4_RESOURCE= "surfaceModelNRW_rectangle_gdalclip_narrow.asc"; //Gdal clip (700 cols, 900 rows) of NRW tile to make a tall model
 	
 	
 	private double easting, northing, bearing, tilt, myHeight;				// test conditions
@@ -315,14 +315,12 @@ public class LineOfSightTest extends TestCase {
     }
         
     public void testSmall() throws IOException, NoIntersectionException, StartPositionOutOfBoundsException, ReachedSurfaceBoundsException {
-    	Raster nrwHeightMap = new Raster(fileFromResource( SMALL_RESOURCE));
-    	System.out.println("  ");
-    	System.out.println("  ");
-    	easting = 265004.65031; 					
-        northing = 289003.47645;
+    	Raster nrwHeightMap = new Raster(fileFromResource( SMALL_RESOURCE)); //Small grid for debugging
+    	easting = 265003.51847;
+        northing =289004.48428;
         bearing = 0;
-        tilt = 30;
-        myHeight = 1.5;
+        tilt = 70; //Lots of tilt so we don'r run out of the model 
+        myHeight = 1.5; 
         
         los = new LineOfSight(nrwHeightMap, easting, northing, bearing, tilt, myHeight);
     	double[] result = los.calculateLOS();
@@ -400,8 +398,8 @@ public class LineOfSightTest extends TestCase {
 	    Raster raster = new Raster(fileFromResource(RASTER4_RESOURCE));
 	    los = new LineOfSight(raster, easting, northing, bearing, tilt, myHeight);
 	    
-	    expectedEyeHeight = myHeight + 72.42;  			// known for our position
-	    expectedIntersectHeight = 74.65;				// correct for this orientation
+	    expectedEyeHeight = myHeight + 72.41999816894531;  			// known for our position
+	    expectedIntersectHeight = 74.6500015258789;				// correct for this orientation
 	    expectedX = easting;
 	    expectedY = 289286.02543;						// checked in qgis
 	    expectedDistance = 9.3;   
@@ -410,7 +408,7 @@ public class LineOfSightTest extends TestCase {
         
 	    System.out.println("distance: " + result[0]);
         System.out.println("result1 " + result[1]);
-        System.out.println("result2&3 " + result[2] + ", " +result[3]);
+        System.out.println("result2&3 " + result[2] + ", " + result[3]);
         
 	    dbg(LineOfSight.resultAsString(result));
 	    checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);        

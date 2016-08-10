@@ -189,7 +189,7 @@ public class Raster {
         	rowIndex=rowIndex+1;       
 		}
 				
-			
+		
 		/*
 		double[][] ASCIIData = new double[cols][rows];
 		
@@ -199,7 +199,10 @@ public class Raster {
 				ASCIIData[i][j] = Double.parseDouble(temp[j]);				
 		 	}
 		}
-		 */		
+		 */
+		
+		
+		
 		//printAscii(ASCIIData);
 		
 		return ASCIIData;
