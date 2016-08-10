@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 /**
  * Encapsulates the data about a raster with utility functions to read
- * the raster from an Arc ASCII grid
+ * the raster from a square or rectangular Arc ASCII grid
  * 
  * @author Sebastian Clarke - Environment Systems - sebastian.clarke@envsys.co.uk
  *

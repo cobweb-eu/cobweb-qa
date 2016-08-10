@@ -375,7 +375,7 @@ public class LineOfSightTest extends TestCase {
     
     
 	/**
-	 * Test of NRW surface model clipped using gdal. 
+	 * Test of NRW surface model clipped using gdal to make a narrow rectangular model. 
 	 * 
 	 * replicates test position data of testInFieldWithNRWDTM()
 	 * 
