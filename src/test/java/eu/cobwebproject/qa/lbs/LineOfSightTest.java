@@ -23,6 +23,9 @@ public class LineOfSightTest extends TestCase {
 	private static final String RASTER2_RESOURCE = "surfaceModelNRW.asc";	// this is the NRW 1M dataset of the same area
 	private static final String FLAT_RESOURCE = "surfaceModel_flat_1m.asc";	// sample flat dataset
 	private static final String OBSERVATION_AREA_RESOURCE = "surfaceModel_sn7698.txt";
+	private static final String SMALL_RESOURCE = "surfaceModel_tiny_rectangle.asc";
+	private static final String RASTER3_RESOURCE= "surfaceModelNRW_rectangle.asc";
+	
 	
 	private double easting, northing, bearing, tilt, myHeight;				// test conditions
 	private LineOfSight los;
@@ -97,7 +100,7 @@ public class LineOfSightTest extends TestCase {
         expectedDistance = 9.3;   
         printStartingConditions("Testing NRW DSM - standing in field facing north");
         result = los.calculateLOS();
-        dbg(LineOfSight.resultAsString(result));
+        dbg(LineOfSight.resultAsString(result));        
         checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);
        
         los.setBearing(bearing = 45); 	
@@ -311,7 +314,30 @@ public class LineOfSightTest extends TestCase {
     	
     }
     
-       
+    
+
+    public void testSmall() throws IOException, NoIntersectionException, StartPositionOutOfBoundsException, ReachedSurfaceBoundsException {
+    	Raster nrwHeightMap = new Raster(fileFromResource( SMALL_RESOURCE));
+    	System.out.println("  ");
+    	System.out.println("  ");
+    	easting = 265004.65031; 					
+        northing = 289003.47645;
+        bearing = 0;
+        tilt = 30;
+        myHeight = 1.5;
+        
+        los = new LineOfSight(nrwHeightMap, easting, northing, bearing, tilt, myHeight);
+    	double[] result = los.calculateLOS();
+        System.out.println("result0 " + result[0]);
+        System.out.println("result1 " + result[1]);
+        System.out.println("result23 " + result[2] + ", " +result[3]);
+        System.out.println("result2 " + result[3]);
+    }
+    
+    
+
+    
+    
     private void printStartingConditions(String testName) {
     	if(DEBUG) {
 	    	System.out.println(testName);

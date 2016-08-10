@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Arrays;
 
 /**
  * Encapsulates the data about a raster with utility functions to read
@@ -168,6 +169,28 @@ public class Raster {
 	 * @throws IOException If there is a problem reading from the file
 	 */
 	private static double[][] consumeAsciiData(BufferedReader br, int cols, int rows) throws IOException {	
+				
+		double[][] ASCIIData = new double[rows][cols];
+		
+		int rowIndex=0;
+		int colIndex=0;
+		String line;
+		while ((line = br.readLine()) != null)	
+		{			
+			String[] values = line.trim().split("[ ]+");			
+        	for (String str : values)
+        	{
+        		double str_double = Double.parseDouble(str);    		
+        		ASCIIData[rowIndex][colIndex]=str_double;
+        		//System.out.print(ASCIIData[rowIndex][colIndex] + " ");
+				colIndex=colIndex+1;
+        	}
+        	colIndex=0;
+        	rowIndex=rowIndex+1;       
+		}
+				
+			
+		/*
 		double[][] ASCIIData = new double[cols][rows];
 		
 		for(int i = 0;i < cols;i++) {
@@ -176,10 +199,20 @@ public class Raster {
 				ASCIIData[i][j] = Double.parseDouble(temp[j]);				
 		 	}
 		}
+		 */		
+		//printAscii(ASCIIData);
 		
 		return ASCIIData;
+	
+	
+	}
+		private static void printAscii(double[][] ASCIIData) {
+		System.out.println("printing ascii:");		
+		  for (double[] row : ASCIIData) 
+		        System.out.println(Arrays.toString(row));    
 	}
 	
+		
 	public String toString() {
 		if(fileName != null)
 			return fileName;
