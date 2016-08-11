@@ -159,7 +159,7 @@ public class Raster {
 	}
 	
 	/**
-	 * Private static function to read the surface model raster from an opened
+	 * Private static function to read the square or rectangular surface model raster from an opened
 	 * BufferedReader. This does not close the BufferedReader object
 	 * 
 	 * @param br: The opened BufferedReader
@@ -182,31 +182,13 @@ public class Raster {
         	{
         		double str_double = Double.parseDouble(str);    		
         		ASCIIData[rowIndex][colIndex]=str_double;
-        		//System.out.print(ASCIIData[rowIndex][colIndex] + " ");
 				colIndex=colIndex+1;
         	}
         	colIndex=0;
         	rowIndex=rowIndex+1;       
-		}
-				
-		
-		/*
-		double[][] ASCIIData = new double[cols][rows];
-		
-		for(int i = 0;i < cols;i++) {
-			String[] temp = br.readLine().trim().split("[ ]+");
-			for(int j = 0;j < rows;j++) {
-				ASCIIData[i][j] = Double.parseDouble(temp[j]);				
-		 	}
-		}
-		 */
-		
-		
-		
-		//printAscii(ASCIIData);
-		
-		return ASCIIData;
-	
+		}						
+		//printAscii(ASCIIData); //for debugging, don't use on big models		
+		return ASCIIData;	
 	
 	}
 		private static void printAscii(double[][] ASCIIData) {
