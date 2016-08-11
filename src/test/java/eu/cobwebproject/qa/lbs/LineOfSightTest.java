@@ -23,6 +23,10 @@ public class LineOfSightTest extends TestCase {
 	private static final String RASTER2_RESOURCE = "surfaceModelNRW.asc";	// this is the NRW 1M dataset of the same area
 	private static final String FLAT_RESOURCE = "surfaceModel_flat_1m.asc";	// sample flat dataset
 	private static final String OBSERVATION_AREA_RESOURCE = "surfaceModel_sn7698.txt";
+	private static final String SMALL_RESOURCE = "surfaceModel_tiny.asc"; //Small 10x10 file for debugging
+	private static final String RASTER3_RESOURCE= "surfaceModelNRW_rectangle_wide.asc"; //wide (100 cols, 900 rows) modification to NRW sample tile 
+	private static final String RASTER4_RESOURCE= "surfaceModelNRW_rectangle_gdalclip_narrow.asc"; //Gdal clip (700 cols, 900 rows) of NRW tile to make a tall model
+	
 	
 	private double easting, northing, bearing, tilt, myHeight;				// test conditions
 	private LineOfSight los;
@@ -97,7 +101,7 @@ public class LineOfSightTest extends TestCase {
         expectedDistance = 9.3;   
         printStartingConditions("Testing NRW DSM - standing in field facing north");
         result = los.calculateLOS();
-        dbg(LineOfSight.resultAsString(result));
+        dbg(LineOfSight.resultAsString(result));        
         checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);
        
         los.setBearing(bearing = 45); 	
@@ -261,8 +265,7 @@ public class LineOfSightTest extends TestCase {
         	assertEquals(e.getMessage(), "Surface X out of bounds: 1000");
         }
     }
-    
-    
+        
     /**
      * Test using values directly copied from a real observation (uses custom heightmap location)
      * @throws IOException
@@ -310,8 +313,108 @@ public class LineOfSightTest extends TestCase {
     	System.out.println(LineOfSight.resultAsString(result));
     	
     }
+        
+    public void testSmall() throws IOException, NoIntersectionException, StartPositionOutOfBoundsException, ReachedSurfaceBoundsException {
+    	Raster nrwHeightMap = new Raster(fileFromResource( SMALL_RESOURCE)); //Small grid for debugging
+    	easting = 265003.51847;
+        northing =289004.48428;
+        bearing = 0;
+        tilt = 70; //Lots of tilt so we don'r run out of the model 
+        myHeight = 1.5; 
+        
+        los = new LineOfSight(nrwHeightMap, easting, northing, bearing, tilt, myHeight);
+    	double[] result = los.calculateLOS();
+        System.out.println("result0 " + result[0]);
+        System.out.println("result1 " + result[1]);
+        System.out.println("result23 " + result[2] + ", " +result[3]);
+        System.out.println("result2 " + result[3]);
+    }
     
-       
+    
+	/**
+	 * Test of NRW surface model with fewer rows than cols
+	 * 
+	 * replicates test position data of testInFieldWithNRWDTM()
+	 * 
+	 * @throws IOException if problem reading the raster
+	 * @throws IntersectionException if we unexpectedly did not intersect the DTM
+	 */
+    
+    public void testInFieldWithNRWDTMRectangle() throws IOException, IntersectionException{
+        double expectedIntersectHeight, expectedX, expectedY, expectedDistance, expectedEyeHeight;
+        double[] result;
+        
+		// Set up initial test conditions
+		easting = 265114.674984;	// standing in a field 
+	    northing = 289276.72543;	// standing in a field
+	    bearing = 0;				// facing north
+	    tilt = 0;					// angled at horizon
+	    myHeight = 2;				// 2m tall
+	    
+	    // load raster and setup LineOfSight instance
+	    Raster raster = new Raster(fileFromResource(RASTER3_RESOURCE));
+	    los = new LineOfSight(raster, easting, northing, bearing, tilt, myHeight);
+	    
+	    expectedEyeHeight = myHeight + 72.42;  			// known for our position
+	    expectedIntersectHeight = 74.65;				// correct for this orientation
+	    expectedX = easting;
+	    expectedY = 289286.02543;						// checked in qgis
+	    expectedDistance = 9.3;   
+	    printStartingConditions("Testing NRW DSM - standing in field facing north");
+	    result = los.calculateLOS();
+        
+	    System.out.println("distance: " + result[0]);
+        System.out.println("result1 " + result[1]);
+        System.out.println("result2&3 " + result[2] + ", " +result[3]);
+        
+	    dbg(LineOfSight.resultAsString(result));
+	    checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);        
+    }
+    
+    
+    
+    
+	/**
+	 * Test of NRW surface model clipped using gdal to make a narrow rectangular model. 
+	 * 
+	 * replicates test position data of testInFieldWithNRWDTM()
+	 * 
+	 * @throws IOException if problem reading the raster
+	 * @throws IntersectionException if we unexpectedly did not intersect the DTM
+	 */
+    
+    public void testInFieldWithNRWDTMRectangleGDAL() throws IOException, IntersectionException{
+        double expectedIntersectHeight, expectedX, expectedY, expectedDistance, expectedEyeHeight;
+        double[] result;
+        
+		// Set up initial test conditions
+		easting = 265114.674984;	// standing in a field 
+	    northing = 289276.72543;	// standing in a field
+	    bearing = 0;				// facing north
+	    tilt = 0;					// angled at horizon
+	    myHeight = 2;				// 2m tall
+	    
+	    // load raster and setup LineOfSight instance
+	    Raster raster = new Raster(fileFromResource(RASTER4_RESOURCE));
+	    los = new LineOfSight(raster, easting, northing, bearing, tilt, myHeight);
+	    
+	    expectedEyeHeight = myHeight + 72.41999816894531;  			// known for our position
+	    expectedIntersectHeight = 74.6500015258789;				// correct for this orientation
+	    expectedX = easting;
+	    expectedY = 289286.02543;						// checked in qgis
+	    expectedDistance = 9.3;   
+	    printStartingConditions("Testing NRW DSM - standing in field facing north");
+	    result = los.calculateLOS();
+        
+	    System.out.println("distance: " + result[0]);
+        System.out.println("result1 " + result[1]);
+        System.out.println("result2&3 " + result[2] + ", " + result[3]);
+        
+	    dbg(LineOfSight.resultAsString(result));
+	    checkResult(result, expectedEyeHeight, expectedIntersectHeight, expectedX, expectedY, expectedDistance);        
+    }
+    
+        
     private void printStartingConditions(String testName) {
     	if(DEBUG) {
 	    	System.out.println(testName);

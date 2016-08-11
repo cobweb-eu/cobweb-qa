@@ -108,7 +108,7 @@ public class LineOfSight {
 		while (distance < scanLimit) {					// scan down in step size until scan limit
 			double x = Math.cos(theta) * distance;		// x displacement
 			double y = Math.sin(theta) * distance; 	// y displacement
-			
+						 
 			// use the tilt to calculate ray height at this distance
 			double visionHeight = getRayHeight(distance, eyeHeight);
 			// get the height from the surface map at this displacement
@@ -138,8 +138,7 @@ public class LineOfSight {
 	private int getYCell(double northing) {
 		double localY = northing - heightMap.getParams().getylCorner();	
 		int cellIndex = (int) Math.ceil(localY / heightMap.getParams().getcellSize());
-		
-		return heightMap.getParams().getnCols() - cellIndex; // reverse indexing
+		return heightMap.getParams().getnRows() - cellIndex; // reverse indexing, need to use nrows for the reversing of a northing value. 
 	}
 	
 	/**
@@ -151,8 +150,7 @@ public class LineOfSight {
 	private int getXCell(double easting){
 		double localX = easting - heightMap.getParams().getxlCorner();
 		int cellIndex = (int) Math.floor((localX / heightMap.getParams().getcellSize()));
-		
-		return cellIndex; // apparently no reverse indexing..
+		return cellIndex; // apparently no reverse indexing.. (it's because ascii index from lower left corner)
 	}
 	
 	/**
@@ -165,7 +163,7 @@ public class LineOfSight {
 	 * @throws ReachedSurfaceBoundsException If the world point is beyond the bounds of the raster extent
 	 */
 	private double getSurfaceHeightForPoint(double northing, double easting) throws ReachedSurfaceBoundsException {
-		try {
+		try {	
 			return heightMap.getXY(getXCell(easting),getYCell(northing));
 		} catch (ArrayIndexOutOfBoundsException e) {
 			// Tried to look outside height map extent
